@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ConceptLabLogo.jpg" alt="ConceptLab logo" width="180">
+  <img src="ConceptLabLogo.svg" alt="ConceptLab logo" width="180">
 </p>
 
 <p align="center">
