@@ -1,0 +1,40 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Java build output
+*.class
+*.jar
+*.war
+*.ear
+out/
+build/
+target/
+bin/
+
+# IDE metadata
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+
+# ConceptLab local user data
+*.clab
+conceptlab-data/
