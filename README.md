@@ -2,8 +2,6 @@
 
 **A Java desktop study platform I built to turn course material into application-focused practice, feedback, and reusable StudySets.**
 
-[![Verify and capture portfolio](https://github.com/kzhu37/ConceptLab.Java-Portfolio/actions/workflows/verify-and-capture.yml/badge.svg)](https://github.com/kzhu37/ConceptLab.Java-Portfolio/actions/workflows/verify-and-capture.yml)
-
 **Sole designer & developer:** Kevin Zhu  
 **Stack:** Java · Swing/AWT · Java HTTP Client · Groq API · local file persistence  
 **Product testing:** 60+ users and testers, with several classmates and friends adopting ConceptLab for their own studying
