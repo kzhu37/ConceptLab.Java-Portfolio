@@ -24,7 +24,7 @@ The strongest outcome I can support is simpler: some friends, peers, and other u
 
 ## What I was trying to learn from testing
 
-The original presentation work around ConceptLab focused on a recurring learning problem: having notes and recognizing definitions does not guarantee that a student can apply a concept when the context changes.
+Early ConceptLab development focused on a recurring learning problem: having notes and recognizing definitions does not guarantee that someone can apply a concept when the context changes.
 
 Testing therefore mattered less as a popularity exercise and more as a way to ask practical product questions:
 

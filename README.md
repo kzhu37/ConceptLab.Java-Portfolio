@@ -91,7 +91,7 @@ The system can then build flashcards, a broader unit-test bank, and related lear
 
 ### Practice is configurable, not fixed
 
-Students can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.
+Users can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.
 
 ![ConceptLab fresh-practice settings showing difficulty, response mix, challenge, seen-question, and uniqueness controls](docs/media/practice-settings.png)
 
