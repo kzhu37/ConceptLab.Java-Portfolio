@@ -108,7 +108,7 @@ The quiz flow is designed so a submitted answer leads somewhere useful. ConceptL
 
 ## User testing and adoption
 
-ConceptLab was tested and iterated with **60+ users and testers** during development. Several friends, classmates, and peers moved beyond simply trying the application and began using it to support their own studying.
+ConceptLab was tested and iterated with **60+ users and testers** during development. Several friends and peers moved beyond simply trying the application and began using it to support their own studying.
 
 I do not present that figure as an "active-user" metric; ConceptLab did not use product analytics to measure retention or monthly activity. What mattered to me was seeing a project I had built for a problem around me become useful enough that other students chose to use it themselves.
 
@@ -130,13 +130,13 @@ More detail on how I frame this testing evidence is available in [`docs/USER_TES
 
 The project is intentionally small enough that the important pieces are easy to trace:
 
-- **`Main.java`** — UI construction, navigation, generation pipeline, quiz lifecycle, API calls, and application orchestration.
-- **`StudySet.java`** — aggregate model, duplicate prevention, versioned persistence, and backwards-compatible loading.
-- **`Question.java`** — MCQ/short-answer model, invariants, normalized keys, feedback, and answer checking.
-- **`Flashcard.java`** — immutable flashcard model with stable identity.
-- **`ResourceLink.java` / `ResourceType.java`** — validated external learning resources and categories.
-- **`EscapeUtil.java`** — escaping helpers for the custom pipe-delimited persistence format.
-- **`LoadingScreenFacts.java`** — lightweight loading-state content used while background generation runs.
+- **`Main.java`** - UI construction, navigation, generation pipeline, quiz lifecycle, API calls, and application orchestration.
+- **`StudySet.java`** - aggregate model, duplicate prevention, versioned persistence, and backwards-compatible loading.
+- **`Question.java`** - MCQ/short-answer model, invariants, normalized keys, feedback, and answer checking.
+- **`Flashcard.java`** - immutable flashcard model with stable identity.
+- **`ResourceLink.java` / `ResourceType.java`** - validated external learning resources and categories.
+- **`EscapeUtil.java`** - escaping helpers for the custom pipe-delimited persistence format.
+- **`LoadingScreenFacts.java`** - lightweight loading-state content used while background generation runs.
 
 For a deeper technical walkthrough, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
