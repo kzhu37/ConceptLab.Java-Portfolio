@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -15,6 +17,10 @@ public final class ConceptLabSelfTest {
         testResourceValidation();
         testStudySetRoundTrip();
         testCrossBankDuplicateProtection();
+        testBestScoreKeepsMaximum();
+        testDeclaredCountMismatchRejected();
+        testLegacyQuestionFormatLoads();
+        testMalformedPersistedQuestionRejected();
         System.out.println("ConceptLab self-test: PASS");
     }
 
@@ -168,5 +174,104 @@ public final class ConceptLabSelfTest {
             overlapRejected = true;
         }
         assert overlapRejected : "practice and unit-test banks must remain disjoint by normalized prompt";
+    }
+
+    private static void testBestScoreKeepsMaximum() {
+        StudySet set = new StudySet("Score Guard");
+        set.updateBestUnitTestPercent(72.0);
+        set.updateBestUnitTestPercent(68.0);
+        assert Math.abs(set.getBestUnitTestPercent() - 72.0) < 0.0001 : "best score must not move backward";
+        set.updateBestUnitTestPercent(91.0);
+        assert Math.abs(set.getBestUnitTestPercent() - 91.0) < 0.0001 : "higher score should replace prior best";
+    }
+
+    private static void testDeclaredCountMismatchRejected() throws Exception {
+        Path file = Files.createTempFile("conceptlab-count-mismatch-", ".clab");
+        String corrupt = String.join("\n",
+                StudySet.FILE_HEADER,
+                "META",
+                "id=count-test",
+                "title=Count Test",
+                "bestUnitTestPercent=-1.0",
+                "",
+                "FLASHCARDS|N=1",
+                "",
+                "PRACTICE|N=0",
+                "",
+                "UNITTEST|N=0",
+                "",
+                "RESOURCES|N=0"
+        );
+        Files.writeString(file, corrupt, StandardCharsets.UTF_8);
+
+        boolean rejected = false;
+        try {
+            StudySet.readFromFile(file);
+        } catch (IOException expected) {
+            rejected = expected.getMessage().contains("FLASHCARDS count mismatch");
+        }
+        assert rejected : "declared section count corruption must be rejected";
+        Files.deleteIfExists(file);
+    }
+
+    private static void testLegacyQuestionFormatLoads() throws Exception {
+        Path file = Files.createTempFile("conceptlab-legacy-", ".clab");
+        String legacy = String.join("\n",
+                "CONCEPTLAB_STUDYSET|v3",
+                "META",
+                "id=legacy-test",
+                "title=Legacy Test",
+                "bestUnitTestPercent=82.0",
+                "",
+                "FLASHCARDS|N=0",
+                "",
+                "PRACTICE|N=1",
+                "Q|legacy-q|Forces|0.6|false|A 3 kg object accelerates at 2 m/s^2. What is the net force?|3 N|5 N|6 N|9 N|2|Use F = ma.|Add is not correct.|Correct: 6 N.|This is too large.",
+                "",
+                "UNITTEST|N=0",
+                "",
+                "RESOURCES|N=0"
+        );
+        Files.writeString(file, legacy, StandardCharsets.UTF_8);
+
+        StudySet loaded = StudySet.readFromFile(file);
+        assert loaded.getPracticeQuestions().size() == 1 : "legacy question should load";
+        Question q = loaded.getPracticeQuestions().get(0);
+        assert "legacy-q".equals(q.getId());
+        assert q.getResponseType() == Question.ResponseType.MCQ;
+        assert q.checkAnswer(2);
+        assert Math.abs(loaded.getBestUnitTestPercent() - 82.0) < 0.0001;
+
+        Files.deleteIfExists(file);
+    }
+
+    private static void testMalformedPersistedQuestionRejected() throws Exception {
+        Path file = Files.createTempFile("conceptlab-malformed-question-", ".clab");
+        String malformed = String.join("\n",
+                StudySet.FILE_HEADER,
+                "META",
+                "id=malformed-test",
+                "title=Malformed Test",
+                "bestUnitTestPercent=-1.0",
+                "",
+                "FLASHCARDS|N=0",
+                "",
+                "PRACTICE|N=1",
+                "Q4|bad-q|Forces|0.5|false|MCQ|Broken question|0|||4|A|B|C",
+                "",
+                "UNITTEST|N=0",
+                "",
+                "RESOURCES|N=0"
+        );
+        Files.writeString(file, malformed, StandardCharsets.UTF_8);
+
+        boolean rejected = false;
+        try {
+            StudySet.readFromFile(file);
+        } catch (IOException expected) {
+            rejected = true;
+        }
+        assert rejected : "malformed persisted question records must be rejected";
+        Files.deleteIfExists(file);
     }
 }
