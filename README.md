@@ -1,205 +1,276 @@
-# ConceptLab
+<p align="center">
+  <img src="ConceptLabLogo.png" alt="ConceptLab logo" width="96">
+</p>
 
-**A Java desktop study platform built to turn course material into application-focused practice, feedback, and reusable StudySets.**
+<h1 align="center">ConceptLab</h1>
 
-**Sole designer & developer:** Kevin Zhu  
-**Stack:** Java · Swing/AWT · Groq API · local file persistence  
-**Product testing:** 60+ users and testers, with several classmates and friends adopting ConceptLab for their own studying
+<p align="center">
+  <strong>A Java desktop study platform I built to turn course material into application-focused practice, feedback, and reusable StudySets.</strong>
+</p>
 
-ConceptLab began with a problem I kept seeing around me: students could spend hours reviewing notes and memorizing definitions, yet still struggle when a test changed the context and asked them to apply what they knew. I built ConceptLab to make that gap the center of the study process.
+<p align="center">
+  Java · Swing/AWT · Java HTTP Client · Groq API · local file persistence
+</p>
 
-Instead of acting only as a flashcard deck, ConceptLab turns a student's own material into a structured study environment with generated flashcards, application-oriented practice, unit tests, detailed answer feedback, relevant learning resources, and persistent StudySets that can be saved and revisited.
+<p align="center">
+  <a href="#why-i-built-it">Why</a> ·
+  <a href="#engineering-highlights">Engineering</a> ·
+  <a href="#product-workflow">Product</a> ·
+  <a href="#development-decisions-and-iteration">Iteration</a> ·
+  <a href="#verification-and-reproducibility">Verification</a> ·
+  <a href="#run-locally">Run locally</a>
+</p>
 
-> **Design principle:** application matters more than memorization alone. Useful feedback should be part of learning, not just the score at the end.
+| Independent ownership | Real-world use | Verified portfolio evidence |
+| --- | --- | --- |
+| Sole designer and developer | 60+ users and testers during development, with several classmates and friends adopting it for their own studying | GitHub Actions compiles the application, runs self-tests, checks for exposed Groq credentials, launches the real Swing UI, and regenerates the screenshots used here |
+
+![ConceptLab dashboard showing a Newtonian Mechanics StudySet](docs/media/conceptlab-dashboard.png)
+
+*This screenshot is generated from the current application in CI using an isolated demo StudySet. It is not a mockup.*
+
+## Why I built it
+
+ConceptLab began with a problem I kept seeing around me: students could spend hours reviewing notes and memorizing definitions, then struggle when a test changed the context and asked them to **apply** what they knew.
+
+I wanted to build something that treated that gap as the center of the study process. Instead of stopping at flashcards, ConceptLab connects source material, practice, testing, feedback, review, and saved progress in one local desktop workflow.
+
+> **Design principle:** application matters more than memorization alone, and feedback should be part of learning rather than only the score at the end.
+
+That principle became both a product decision and an engineering requirement. Fresh questions should not simply repeat familiar wording. Generated content should not enter the application just because an API returned it. A feature should not remain merely because it is technically possible.
 
 ## At a glance
 
 | Area | What ConceptLab does |
 | --- | --- |
-| **Study-set generation** | Converts user-provided notes, topic goals, and custom instructions into structured study material. |
+| **StudySet generation** | Converts notes, learning goals, and custom instructions into structured study material. |
 | **Flashcards** | Builds concept-focused cards with stable identities, topic labels, and persistent storage. |
-| **Fresh practice** | Generates new quizzes with configurable length, difficulty, open-response mix, challenge questions, seen-question avoidance, and strict uniqueness. |
-| **Unit tests** | Builds broader, higher-difficulty assessments intended to cover the StudySet rather than repeat practice questions. |
-| **Feedback** | Evaluates responses, explains mistakes, and surfaces related resources and flashcards after a question. |
-| **Reliability** | Validates structured AI output, batches larger requests, retries across model/key combinations, and falls back when generation fails. |
+| **Fresh practice** | Generates configurable quizzes with difficulty, MCQ/open-response mix, challenge questions, seen-question avoidance, and optional answer uniqueness. |
+| **Unit tests** | Builds broader assessments intended to cover the StudySet rather than repeat the practice bank. |
+| **Feedback loop** | Evaluates responses, explains mistakes, and connects questions back to related resources and flashcards. |
+| **Reliability** | Validates structured AI output, batches larger requests, retries across key/model combinations, and falls back locally when remote generation fails. |
 | **Persistence** | Stores StudySets locally in a versioned text format with validation, escaping, and backward-compatible parsing. |
-
-## Why I built it
-
-The original idea was simple: **having notes is not the same as understanding them**.
-
-I wanted a study tool that would do more than make students recognize familiar wording. ConceptLab's question-generation rules therefore prioritize application: interpreting information, choosing methods, identifying errors, making inferences, and explaining reasoning. Definitions can still matter, but they are treated as a foundation rather than the endpoint.
-
-That philosophy shaped the product as it grew. It also changed the way I approached software development. Early on, I tended to treat adding features as progress. Building for other students forced me to ask a better question: **does this actually improve the learning experience?**
-
-## How ConceptLab works
-
-1. **Create a StudySet.** The user provides source material, a title, learning goals, and optional custom instructions.
-2. **Build structured study content.** ConceptLab creates flashcards, a unit-test bank, and curated resource links.
-3. **Generate fresh practice on demand.** The user can control question count, difficulty, response style, challenge level, and uniqueness settings.
-4. **Validate before use.** AI output is parsed into ConceptLab's internal models and filtered against structural and duplication rules before it reaches a StudySet.
-5. **Learn from the response.** After answering, the user receives feedback and can jump to related resources or flashcards.
-6. **Persist progress locally.** StudySets and best unit-test performance are stored on disk and can be loaded again later.
 
 ## Engineering highlights
 
-### 1. Making LLM output reliable enough for application code
+### 1. Treating generated output as untrusted data
 
-Calling an LLM was the easy part. The harder problem was making generated content predictable enough to become real application data.
+Calling an LLM was the easy part. The harder problem was making generated content dependable enough to become real application data.
 
-ConceptLab's generation pipeline requests strict JSON, parses responses with an internal recursive-descent JSON parser, converts valid data into domain models, and rejects or filters malformed output. Larger question requests are split into bounded batches, while source material is chunked to reduce token-pressure failures.
+ConceptLab requests JSON-only output, parses the response, checks structure, converts valid records into domain models, filters malformed or repeated content, and only then admits it into a StudySet. Larger question requests are split into bounded batches, and source material is chunked to reduce output-limit failures.
 
-The API layer also includes:
+The API layer also includes primary and secondary environment-based credentials, primary and fallback models, retry handling, token-aware output budgets, truncated-response detection, and deterministic local fallback paths.
 
-- environment-based credentials instead of hard-coded keys;
-- primary and secondary key support;
-- primary and fallback model sequencing;
-- retry handling for transient failures and rate limits;
-- token-aware output budgeting;
-- detection of blank, malformed, and truncated responses;
-- deterministic local fallback generation when remote generation is unavailable.
+![ConceptLab generation pipeline from source material through guarded generation and validated StudySet models](docs/media/generation-pipeline.svg)
 
-This turned the AI integration from a single API call into a fault-tolerant pipeline.
+The implementation is visible in [`Main.java`](Main.java), while the durable model rules live in [`StudySet.java`](StudySet.java), [`Question.java`](Question.java), [`Flashcard.java`](Flashcard.java), and [`ResourceLink.java`](ResourceLink.java).
 
-### 2. Designing for application, not repetition
+The lesson was simple: **I was not just calling an API. I was building a reliable system around an unreliable generator.**
 
-ConceptLab's practice system is deliberately configurable. A student can choose question count, target difficulty, approximate open-response percentage, challenge-style questions, whether previously seen prompts should be avoided, and whether correct-answer text must also remain unique.
+### 2. Turning a learning philosophy into data rules
 
-At generation time, the system tracks normalized prompt and answer keys so new questions can be filtered against material the student has already encountered. Practice and unit-test banks are also kept disjoint by normalized prompt inside the persisted StudySet.
+ConceptLab is designed around application rather than repeated recognition. The generation instructions push toward computation, inference, interpretation, method selection, error diagnosis, and explanation.
 
-The generation instructions themselves strongly bias questions toward applying knowledge rather than recalling isolated definitions. This is one of the clearest examples of the project's learning philosophy becoming an engineering requirement.
+That philosophy also appears in the data layer. Practice and unit-test banks are kept disjoint by normalized prompt. The generation flow can block previously seen prompts and, when requested, duplicate correct-answer text. [`Question.java`](Question.java) validates response type, MCQ structure, choice uniqueness, answer indices, difficulty, and stable identity before a question becomes usable application data.
 
-### 3. Enforcing data integrity in the domain models
+This is one of the project's clearest engineering connections: **if the learning goal is transfer, near-duplicate questions are not good enough.**
 
-The `Question` model supports both multiple-choice and short-answer interaction modes. It validates core invariants at construction time, including:
+### 3. Building local persistence instead of adding infrastructure I did not need
 
-- difficulty values constrained to the `[0, 1]` range;
-- exactly four choices for MCQs;
-- non-blank and distinct choices after normalization;
-- valid correct-answer indices;
-- normalized prompt/answer keys used for matching and deduplication;
-- stable UUID-based identity.
+I chose a local-first persistence model rather than adding a database simply because it would make the stack longer.
 
-`ResourceLink` similarly validates HTTP/HTTPS URLs before they enter a StudySet, helping keep malformed resource data out of persistence and the UI.
+Each StudySet is stored under the user's home directory in a versioned `.clab` format. [`StudySet.java`](StudySet.java) stores metadata, flashcards, practice questions, unit-test questions, resources, and the best unit-test score. The loader verifies declared section counts and recognizes older question-record formats.
 
-### 4. Building a versioned local persistence format
-
-I chose a local-first persistence model instead of introducing a database that the project did not need.
-
-Each StudySet is stored in a versioned text format with separate sections for metadata, flashcards, practice questions, unit-test questions, and resources. The loader verifies declared section counts, validates parsed objects, and supports older question-record formats for backward compatibility.
-
-Because user content can contain pipes, backslashes, and newlines, I also built custom escaping and unescaping logic so content can safely round-trip through the file format.
-
-## Product decisions and iteration
-
-### JavaFX → Swing
-
-One of the most important decisions in the project was not adding a feature at all. My earlier interface work used JavaFX, but framework and build-integration issues repeatedly slowed development. I eventually migrated the application to Swing, flattened the project structure, and stabilized the build rather than continuing to invest in an approach that was creating friction.
-
-That experience reinforced a principle that became central to ConceptLab: **more complexity does not automatically produce a better product.**
-
-### From "generate something" to "generate something dependable"
-
-The AI pipeline evolved for the same reason. Early generation could fail because of malformed responses, output-size limits, rate limits, repetitive questions, or unavailable models. Instead of treating those as one-off bugs, I redesigned the pipeline around validation, retry/fallback behavior, batching, token budgeting, and uniqueness safeguards.
-
-### Building around feedback
-
-The quiz flow is designed so a submitted answer leads somewhere useful. ConceptLab can provide detailed feedback, surface relevant study resources, and identify related flashcards that the student can revisit immediately. The intent is to make the error part of the learning path rather than simply mark it wrong and move on.
-
-## User testing and adoption
-
-ConceptLab was tested and iterated with **60+ users and testers** during development. Several friends and peers moved beyond simply trying the application and began using it to support their own studying.
-
-I do not present that figure as an "active-user" metric; ConceptLab did not use product analytics to measure retention or monthly activity. What mattered to me was seeing a project I had built for a problem around me become useful enough that other students chose to use it themselves.
-
-More detail on how I frame this testing evidence is available in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
-
-## Technology
-
-| Technology | Role in the project |
-| --- | --- |
-| **Java** | Core application, models, persistence, networking, generation logic, and quiz flow. |
-| **Swing / AWT** | Desktop interface and interaction layer. |
-| **Java HTTP Client** | Direct requests to the Groq OpenAI-compatible endpoint and resource reachability checks. |
-| **Groq API** | LLM-backed flashcard generation, question generation, resource curation, and answer feedback. |
-| **Custom JSON parser** | Dependency-free parsing of structured model responses. |
-| **Local file storage** | Versioned `.clab` StudySet persistence under the user's home directory. |
-| **Git / GitHub** | Source control and the curated public portfolio version of the project. |
-
-## Core source structure
-
-The project is intentionally small enough that the important pieces are easy to trace:
-
-- **`Main.java`** - UI construction, navigation, generation pipeline, quiz lifecycle, API calls, and application orchestration.
-- **`StudySet.java`** - aggregate model, duplicate prevention, versioned persistence, and backwards-compatible loading.
-- **`Question.java`** - MCQ/short-answer model, invariants, normalized keys, feedback, and answer checking.
-- **`Flashcard.java`** - immutable flashcard model with stable identity.
-- **`ResourceLink.java` / `ResourceType.java`** - validated external learning resources and categories.
-- **`EscapeUtil.java`** - escaping helpers for the custom pipe-delimited persistence format.
-- **`LoadingScreenFacts.java`** - lightweight loading-state content used while background generation runs.
+User-authored content can contain pipes, backslashes, and newlines, so [`EscapeUtil.java`](EscapeUtil.java) explicitly escapes and restores reserved characters so content can round-trip without corrupting the file format.
 
 For a deeper technical walkthrough, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Running ConceptLab locally
+## Product workflow
+
+### From notes to a learning path
+
+A StudySet begins with the student's own source material. The user can also specify learning goals, custom instructions, target difficulty, flashcard count, and whether challenge-style material should be included.
+
+![ConceptLab StudySet creation form populated with mechanics notes and learning goals](docs/media/create-study-set.png)
+
+The system can then build flashcards, a broader unit-test bank, and related learning resources. Fresh practice is generated on demand so the user is not limited to one fixed question set.
+
+### Practice is configurable, not fixed
+
+Students can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.
+
+![ConceptLab fresh-practice settings showing difficulty, response mix, challenge, seen-question, and uniqueness controls](docs/media/practice-settings.png)
+
+Those settings are not just interface options. They feed directly into prompt construction, generation constraints, duplicate filtering, and the resulting `Question` objects.
+
+### Feedback is part of the loop
+
+A submitted response can lead to correctness feedback, an explanation, a related resource, and related flashcards. For questions with known answer keys, deterministic checking keeps part of the feedback flow usable when remote grading is unavailable.
+
+```text
+answer
+  -> evaluate
+  -> explain
+  -> revisit related concept or resource
+  -> try again
+```
+
+The point is not simply to mark an answer right or wrong. The error should lead somewhere useful.
+
+## Development decisions and iteration
+
+ConceptLab became stronger when I stopped treating added functionality as the same thing as progress.
+
+| Challenge or observation | Decision | What it changed |
+| --- | --- | --- |
+| JavaFX and embedded-UI integration created dependency and build friction | Move the desktop interface to Swing and simplify the project structure | Reduced framework friction and made the application easier to compile and run |
+| Early development rewarded adding features | Shift from feature-first to utility-first design | Kept the product focused on the learning loop instead of accumulating unnecessary controls |
+| Detailed analytics would add storage and interface complexity without solving the core problem | Keep only the best unit-test score | Preserved useful progress feedback while keeping the persistence model simple |
+| Model responses could be malformed, truncated, repetitive, rate-limited, or unavailable | Add structured contracts, validation, batching, retries, token budgeting, duplicate filtering, and fallback paths | Turned generation from a single API call into a guarded pipeline |
+| Testing with other students made clarity and usefulness more important than the feature checklist | Make practice configurable and connect mistakes back to learning material | Shifted the product toward a clearer repeatable study workflow |
+
+The most important design lesson was **more complexity does not automatically make a better product**.
+
+## User testing and adoption
+
+ConceptLab was used or tested by **60+ people during development**, including classmates, friends, and peers. Several students moved beyond a one-time test and began using it to support their own studying.
+
+I use that wording deliberately. ConceptLab did not collect production telemetry for monthly active users, retention, session counts, or measured grade improvements, so I do not claim those metrics.
+
+What mattered more was what testing changed. Repeated use reinforced the need for less repetitive practice, configurable quizzes, useful feedback after mistakes, a clearer workflow, and greater reliability when generation failed.
+
+The evidence standard and claim boundaries are documented in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
+
+## Verification and reproducibility
+
+The public portfolio is continuously checked through [`.github/workflows/verify-and-capture.yml`](.github/workflows/verify-and-capture.yml).
+
+On each relevant push, the workflow:
+
+1. compiles the actual Java application on **JDK 21**;
+2. compiles and runs the dependency-free core self-tests in [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java);
+3. scans the public tree for Groq-style credentials;
+4. launches the real Swing application inside a virtual display;
+5. drives the interface using an isolated demo StudySet;
+6. regenerates the portfolio screenshots used in this README.
+
+The self-tests currently cover escaping round-trips, question invariants, resource URL validation, StudySet save/load round-trips, and duplicate protection across practice and unit-test banks.
+
+This verification layer exists for the same reason as the generation safeguards: **a portfolio claim is stronger when the repository can reproduce the evidence behind it.**
+
+## Architecture and trade-offs
+
+ConceptLab is a local-first Java desktop application.
+
+The durable model layer is separated into focused classes, but the application and service responsibilities remain concentrated in [`Main.java`](Main.java). `Main` currently handles Swing screen construction, navigation, generation orchestration, API communication, quiz lifecycle, persistence coordination, and several utility concerns.
+
+I do not present that as an ideal final architecture. If this were developed into a longer-term production system, the clearest next step would be to separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over performing a late refactor only to make the repository look more modular.
+
+That trade-off is documented in more detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
+## My role
+
+**ConceptLab was independently designed and developed by Kevin Zhu.**
+
+I owned the project end to end:
+
+- identifying the learning problem and product direction;
+- designing the StudySet workflow and desktop interface;
+- implementing flashcards, practice, unit tests, feedback, and resource linking;
+- building the local persistence format and domain validation;
+- integrating and hardening the Groq generation pipeline;
+- debugging API, output, persistence, and interface failures;
+- testing the product with other students and changing priorities based on what was useful;
+- preparing the reproducible public portfolio presentation.
+
+Development tools, including AI-assisted coding tools, were part of the programming workflow. The product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.
+
+## Technology
+
+| Area | Technology and role |
+| --- | --- |
+| Desktop application | Java 21 |
+| Interface | Swing and AWT |
+| Networking | Java HTTP Client |
+| Generative system | Groq OpenAI-compatible API |
+| Structured output | Custom dependency-free JSON parser plus domain validation |
+| Persistence | Versioned local `.clab` files |
+| Concurrency | `SwingWorker` for background generation and grading flows |
+| Verification | GitHub Actions, Java assertions, reproducible UI capture |
+| Version control | Git and GitHub |
+
+## Core source structure
+
+- **[`Main.java`](Main.java):** UI construction, navigation, generation pipeline, quiz lifecycle, API calls, and orchestration.
+- **[`StudySet.java`](StudySet.java):** aggregate model, duplicate prevention, versioned persistence, and backward-compatible loading.
+- **[`Question.java`](Question.java):** MCQ and short-answer model, invariants, normalized keys, feedback, and answer checking.
+- **[`Flashcard.java`](Flashcard.java):** immutable flashcard model with stable identity.
+- **[`ResourceLink.java`](ResourceLink.java) and [`ResourceType.java`](ResourceType.java):** validated external learning resources and categories.
+- **[`EscapeUtil.java`](EscapeUtil.java):** escaping helpers for the custom persistence format.
+- **[`LoadingScreenFacts.java`](LoadingScreenFacts.java):** lightweight educational content displayed during background work.
+- **[`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java):** dependency-free regression and smoke checks for the core model layer.
+- **[`tools/PortfolioCapture.java`](tools/PortfolioCapture.java):** reproducible UI driver used by CI to generate the portfolio screenshots from the current application.
+
+## Run locally
 
 ### Requirements
 
-- **JDK 17 or newer**
-- A Groq API key for LLM-backed generation and AI feedback
+- **JDK 21 recommended**
+- A Groq API key for full LLM-backed generation and AI feedback
 
-The interface can launch without an API key, and several generation paths include deterministic local fallbacks. Full AI-backed generation and open-response feedback require Groq configuration.
+The interface can launch without an API key, and several generation and checking paths include local fallbacks.
 
-### API configuration
+### Configure Groq
 
-Set a primary Groq key through the environment variable:
+ConceptLab reads credentials from environment variables. Real keys are never stored in this public repository.
 
 ```text
 GROQ_API_KEY_PRIMARY=your_key_here
+GROQ_API_KEY_SECONDARY=your_optional_secondary_key_here
 ```
 
-An optional secondary key can be provided through:
-
-```text
-GROQ_API_KEY_SECONDARY=your_secondary_key_here
-```
-
-A placeholder configuration example is provided in [`.env.example`](.env.example). Real credentials should never be committed.
+[`.env.example`](.env.example) documents the variable names. The Java application reads values from the process environment, so set them in your shell or IDE before launching.
 
 ### Compile and run
-
-From the directory containing the Java source files:
 
 ```bash
 javac *.java
 java Main
 ```
 
-ConceptLab stores StudySets under:
+StudySets are stored under:
 
 ```text
 ~/.conceptlab/sets/
 ```
 
-If you use VS Code, a local environment file can be stored outside the repository at:
+### Run the core self-tests
 
-```text
-~/.conceptlab/groq.env
+macOS/Linux:
+
+```bash
+javac *.java
+javac -cp . tests/ConceptLabSelfTest.java
+java -ea -cp .:tests ConceptLabSelfTest
 ```
 
-## My role
-
-**ConceptLab was independently designed and developed by Kevin Zhu.**
-
-I owned the project end to end: identifying the learning problem, planning the product, designing the data models and interface, implementing persistence and quiz behavior, integrating the LLM pipeline, debugging API and UI failures, iterating on the product, and testing it with other students.
-
-Development tools, including AI-assisted coding tools, were used as part of the programming workflow, but the product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.
+On Windows, replace the classpath separator `:` with `;`.
 
 ## What I learned
 
-ConceptLab changed the way I think about engineering. The most useful lesson was not a particular Java API or framework. It was learning to separate **technical possibility** from **product value**.
+ConceptLab changed the way I think about engineering.
 
-I learned to break large problems into smaller systems, replace an approach when it was creating more friction than value, build guardrails around unreliable external behavior, and pay attention to what people actually found useful. The project became as much an exercise in product thinking and iteration as it was in programming.
+**Build for the problem, not the feature list.** Adding something is only progress if it makes the product more useful.
+
+**Treat external behavior defensively.** Model output, saved files, and external resources should be validated before the rest of the application trusts them.
+
+**Simplify deliberately.** Replacing a difficult framework, keeping local storage instead of adding a database, and limiting analytics were engineering decisions, not missing ambition.
+
+**Connect technical choices to the user experience.** Duplicate prevention matters because repetitive practice is weak practice. Background work matters because a frozen interface feels broken. Feedback matters because an error should become the next learning step.
+
+The project became as much an exercise in product thinking and iteration as it was in programming.
 
 ---
 
-*ConceptLab is presented here as a curated technical portfolio project rather than a raw development archive.*
+**Technical deep dive:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)  
+**User-testing context:** [`docs/USER_TESTING.md`](docs/USER_TESTING.md)
