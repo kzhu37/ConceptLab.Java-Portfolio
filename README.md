@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ConceptLabLogo.png" alt="ConceptLab logo" width="96">
+  <img src="ConceptLabLogo.jpg" alt="ConceptLab logo" width="180">
 </p>
 
 <h1 align="center">ConceptLab</h1>
@@ -20,10 +20,6 @@
   <a href="#verification-and-reproducibility">Verification</a> ·
   <a href="#run-locally">Run locally</a>
 </p>
-
-| Independent ownership | Real-world use | Verified portfolio evidence |
-| --- | --- | --- |
-| Sole designer and developer | 60+ users and testers during development, with several classmates and friends adopting it for their own studying | GitHub Actions compiles the application, runs self-tests, checks for exposed Groq credentials, launches the real Swing UI, and regenerates the screenshots used here |
 
 ![ConceptLab dashboard showing a Newtonian Mechanics StudySet](docs/media/conceptlab-dashboard.png)
 
