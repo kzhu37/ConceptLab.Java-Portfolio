@@ -62,21 +62,7 @@ I designed this flow so an error leads somewhere useful: **answer â†’ feedback â
 
 Calling an LLM was the easy part. The harder problem was making generated content reliable enough to become real application data.
 
-```mermaid
-flowchart LR
-    A[Course material + goals] --> B[Prompt construction + source chunking]
-    B --> C[Groq API]
-    C --> D[JSON parsing + structural validation]
-    D --> E[Model invariants + duplicate filtering]
-    E --> F[StudySet models]
-    F --> G[Flashcards]
-    F --> H[Practice]
-    F --> I[Unit tests]
-    F --> J[Resources]
-    F --> K[Versioned local persistence]
-    C -. remote failure .-> L[Deterministic local fallback]
-    L --> E
-```
+![ConceptLab generation pipeline from course material through Groq, validation, quality gates, StudySet models, local fallback, and study outputs](docs/media/generation-pipeline.svg)
 
 The current pipeline includes:
 
