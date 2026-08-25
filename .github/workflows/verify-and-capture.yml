@@ -1,0 +1,75 @@
+name: Verify and capture portfolio
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/media/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify-and-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Compile application
+        run: javac *.java
+
+      - name: Compile verification tools
+        run: javac -cp . tests/ConceptLabSelfTest.java tools/PortfolioCapture.java
+
+      - name: Run core self-tests
+        run: java -ea -cp .:tests ConceptLabSelfTest
+
+      - name: Scan public tree for Groq-style secrets
+        shell: bash
+        run: |
+          if grep -RInE 'gsk_[A-Za-z0-9_-]{20,}' . --exclude-dir=.git; then
+            echo 'Secret-like Groq credential detected in public repository.'
+            exit 1
+          fi
+          echo 'No Groq-style credentials detected.'
+
+      - name: Install virtual display support
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Generate portfolio screenshots from the real application
+        run: |
+          mkdir -p "$RUNNER_TEMP/conceptlab-home"
+          xvfb-run -a -s '-screen 0 1920x1080x24' \
+            java -Duser.home="$RUNNER_TEMP/conceptlab-home" -cp .:tools PortfolioCapture
+
+      - name: Upload screenshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conceptlab-portfolio-screenshots
+          path: docs/media/*.png
+          if-no-files-found: error
+
+      - name: Commit refreshed screenshots
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/media/*.png
+          if git diff --cached --quiet; then
+            echo 'Screenshots are already current.'
+          else
+            git commit -m 'docs: refresh verified ConceptLab screenshots'
+            git push
+          fi
