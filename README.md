@@ -2,8 +2,6 @@
   <img src="ConceptLabLogo.jpg" alt="ConceptLab logo" width="180">
 </p>
 
-<h1 align="center">ConceptLab</h1>
-
 <p align="center">
   <strong>A Java desktop study platform I built to turn course material into application-focused practice, feedback, and reusable StudySets.</strong>
 </p>
