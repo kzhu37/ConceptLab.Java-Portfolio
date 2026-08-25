@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>A Java desktop study platform I built to turn course material into application-focused practice, feedback, and reusable StudySets.</strong>
+  <strong>A Java desktop study platform I built to turn learning material into application-focused practice, feedback, and reusable StudySets.</strong>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 
 ## Why I built it
 
-ConceptLab began with a problem I kept seeing around me: students could spend hours reviewing notes and memorizing definitions, then struggle when a test changed the context and asked them to **apply** what they knew.
+ConceptLab began with a problem I kept seeing around me: people could spend hours reviewing notes and memorizing definitions, then struggle when a test changed the context and asked them to **apply** what they knew.
 
 I wanted to build something that treated that gap as the center of the study process. Instead of stopping at flashcards, ConceptLab connects source material, practice, testing, feedback, review, and saved progress in one local desktop workflow.
 
@@ -83,7 +83,7 @@ For a deeper technical walkthrough, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTU
 
 ### From notes to a learning path
 
-A StudySet begins with the student's own source material. The user can also specify learning goals, custom instructions, target difficulty, flashcard count, and whether challenge-style material should be included.
+A StudySet begins with the user's own source material. The user can also specify learning goals, custom instructions, target difficulty, flashcard count, and whether challenge-style material should be included.
 
 ![ConceptLab StudySet creation form populated with mechanics notes and learning goals](docs/media/create-study-set.png)
 
@@ -121,13 +121,13 @@ ConceptLab became stronger when I stopped treating added functionality as the sa
 | Early development rewarded adding features | Shift from feature-first to utility-first design | Kept the product focused on the learning loop instead of accumulating unnecessary controls |
 | Detailed analytics would add storage and interface complexity without solving the core problem | Keep only the best unit-test score | Preserved useful progress feedback while keeping the persistence model simple |
 | Model responses could be malformed, truncated, repetitive, rate-limited, or unavailable | Add structured contracts, validation, batching, retries, token budgeting, duplicate filtering, and fallback paths | Turned generation from a single API call into a guarded pipeline |
-| Testing with other students made clarity and usefulness more important than the feature checklist | Make practice configurable and connect mistakes back to learning material | Shifted the product toward a clearer repeatable study workflow |
+| Testing with other users made clarity and usefulness more important than the feature checklist | Make practice configurable and connect mistakes back to learning material | Shifted the product toward a clearer repeatable study workflow |
 
 The most important design lesson was **more complexity does not automatically make a better product**.
 
 ## User testing and adoption
 
-ConceptLab was used or tested by **60+ people during development**, including classmates, friends, and peers. Several students moved beyond a one-time test and began using it to support their own studying.
+ConceptLab was used or tested by **60+ people during development**, including friends, peers, and other users. Several people moved beyond a one-time test and began using it to support their own learning.
 
 I use that wording deliberately. ConceptLab did not collect production telemetry for monthly active users, retention, session counts, or measured grade improvements, so I do not claim those metrics.
 
@@ -174,7 +174,7 @@ I owned the project end to end:
 - building the local persistence format and domain validation;
 - integrating and hardening the Groq generation pipeline;
 - debugging API, output, persistence, and interface failures;
-- testing the product with other students and changing priorities based on what was useful;
+- testing the product with other users and changing priorities based on what was useful;
 - preparing the reproducible public portfolio presentation.
 
 Development tools, including AI-assisted coding tools, were part of the programming workflow. The product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.

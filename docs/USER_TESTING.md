@@ -1,8 +1,8 @@
 # User Testing and Adoption
 
-ConceptLab was not developed only as a private coding exercise. During development, I shared it with **60+ users and testers**, including classmates, friends, and peers, so I could see whether the product made sense outside my own workflow.
+ConceptLab was not developed only as a private coding exercise. During development, I shared it with **60+ users and testers**, including friends, peers, and other users, so I could see whether the product made sense outside my own workflow.
 
-Several students went beyond a one-time test and began using ConceptLab to support their own studying.
+Several people went beyond a one-time test and began using ConceptLab to support their own learning.
 
 ## What the 60+ figure means
 
@@ -20,18 +20,18 @@ ConceptLab did not include production telemetry that measured:
 
 I therefore do not claim those metrics.
 
-The strongest outcome I can support is simpler: some classmates, friends, and peers found the project useful enough to continue using it for their own learning after being introduced to it.
+The strongest outcome I can support is simpler: some friends, peers, and other users found the project useful enough to continue using it for their own learning after being introduced to it.
 
 ## What I was trying to learn from testing
 
-The original presentation work around ConceptLab focused on a recurring student problem: having notes and recognizing definitions does not guarantee that a student can apply a concept when the context changes.
+The original presentation work around ConceptLab focused on a recurring learning problem: having notes and recognizing definitions does not guarantee that a student can apply a concept when the context changes.
 
 Testing therefore mattered less as a popularity exercise and more as a way to ask practical product questions:
 
-- Can another student understand the workflow without me explaining every step?
+- Can another user understand the workflow without me explaining every step?
 - Does practice feel different from simply re-reading notes or reviewing definitions?
 - Are generated questions varied enough to remain useful?
-- Does feedback help a student decide what to review next?
+- Does feedback help a user decide what to review next?
 - Are the controls worth the complexity they add?
 - Does the application remain usable when generation or integration behavior is imperfect?
 
@@ -43,7 +43,7 @@ That changed the way I evaluated progress. A feature was no longer automatically
 | --- | --- |
 | Recognition alone was not the learning problem I wanted to solve | Emphasize application, inference, method selection, error diagnosis, and explanation in generated practice |
 | Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and unit-test banks |
-| Different students wanted different kinds of practice | Make quiz length, difficulty, response mix, and challenge level configurable |
+| Different users wanted different kinds of practice | Make quiz length, difficulty, response mix, and challenge level configurable |
 | A wrong answer should lead to a next step | Connect question feedback with related resources and flashcards |
 | More controls and features could make the tool harder to use | Shift from feature-first development toward utility-first design |
 | Framework and integration friction slowed iteration | Simplify the desktop stack and move from earlier JavaFX work to Swing |
@@ -57,8 +57,8 @@ These changes are more important to the portfolio than the raw tester count beca
 
 - ConceptLab was independently designed and developed by Kevin Zhu.
 - It was used or tested by 60+ people during development.
-- The testing group included classmates, friends, and peers.
-- Several students adopted the project to support their own studying.
+- The testing group included friends, peers, and other users.
+- Several people adopted the project to support their own learning.
 - Testing and repeated use influenced the product decisions described above.
 
 ### Claims I do not make
