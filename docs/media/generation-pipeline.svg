@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="610" viewBox="0 0 1200 610" role="img" aria-labelledby="title desc">
   <title id="title">ConceptLab generation pipeline</title>
-  <desc id="desc">Course material and goals are shaped into prompts, sent to the Groq API, parsed and validated, filtered through model invariants and duplicate checks, converted into StudySet models, and surfaced as flashcards, practice, unit tests, resources, and versioned local persistence. Remote failures route through deterministic local fallback generation.</desc>
+  <desc id="desc">Course material and goals are shaped into prompts, sent to the Groq API, parsed and validated, filtered through model invariants and duplicate checks, converted into StudySet models, and surfaced as flashcards, practice, unit tests, resources, and versioned local persistence. Remote failures can route through deterministic local fallback generation.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#516173"/>
@@ -22,7 +22,7 @@
 
   <rect x="1" y="1" width="1198" height="608" rx="18" fill="#ffffff" stroke="#e3e8ef"/>
   <text x="50" y="58" class="title">Engineering the generation pipeline</text>
-  <text x="50" y="86" class="subtitle">ConceptLab treats model output as untrusted external data: shape the request, validate the response, then admit only usable study content.</text>
+  <text x="50" y="86" class="subtitle">Treat model output as untrusted external data: shape the request, validate the response, then admit only usable study content.</text>
 
   <rect x="50" y="135" width="190" height="92" rx="14" class="box-accent"/>
   <text x="145" y="174" text-anchor="middle" class="label">Course material</text>
@@ -58,6 +58,14 @@
 
   <path d="M1065 227 V265 H620 V293" class="arrow"/>
 
+  <rect x="840" y="300" width="250" height="86" rx="14" class="box-fallback"/>
+  <text x="965" y="334" text-anchor="middle" class="label">Deterministic fallback</text>
+  <text x="965" y="359" text-anchor="middle" class="small">keeps core flows usable</text>
+
+  <path d="M620 227 V258 H965 V293" class="dashed"/>
+  <text x="765" y="251" class="small">remote failure</text>
+  <path d="M840 343 H758" class="dashed"/>
+
   <rect x="55" y="465" width="180" height="82" rx="14" class="box-output"/>
   <text x="145" y="501" text-anchor="middle" class="label">Flashcards</text>
   <text x="145" y="526" text-anchor="middle" class="small">concept review</text>
@@ -83,12 +91,4 @@
   <path d="M620 420 H585 V458" class="arrow"/>
   <path d="M620 420 H805 V458" class="arrow"/>
   <path d="M620 420 H1040 V458" class="arrow"/>
-
-  <rect x="760" y="300" width="250" height="86" rx="14" class="box-fallback"/>
-  <text x="885" y="334" text-anchor="middle" class="label">Deterministic fallback</text>
-  <text x="885" y="359" text-anchor="middle" class="small">keeps core flows usable</text>
-
-  <path d="M620 227 V259 H885 V293" class="dashed"/>
-  <text x="760" y="251" class="small" fill="#a85342">remote failure</text>
-  <path d="M760 343 H757" class="dashed"/>
 </svg>
