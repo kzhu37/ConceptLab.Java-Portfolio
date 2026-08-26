@@ -1,0 +1,47 @@
+name: Verify live ConceptLab browser deployment
+
+on:
+  push:
+    branches: [browser-deployment, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: conceptlab-live-browser-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  production-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CONCEPTLAB_BASE_URL: https://conceptlab-browser-xiangseanzhu-7370.vercel.app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Verify public browser, persistence, reset, and production AI
+        run: node tests/production-browser-smoke.mjs
+
+      - name: Upload live browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: conceptlab-production-browser-evidence
+          path: |
+            conceptlab-production.png
+            conceptlab-browser-console-errors.txt
+          if-no-files-found: ignore
