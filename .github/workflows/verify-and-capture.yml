@@ -1,0 +1,110 @@
+name: Verify ConceptLab portfolio
+
+on:
+  push:
+    branches: [main, browser-deployment]
+    paths-ignore:
+      - 'docs/media/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/media/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: conceptlab-portfolio-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-and-capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile desktop application on JDK 21
+        run: javac *.java
+
+      - name: Compile verification tools
+        run: javac -cp . tests/ConceptLabSelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
+
+      - name: Run core self-tests
+        run: java -ea -cp .:tests ConceptLabSelfTest
+
+      - name: Verify bundled browser demo StudySet
+        run: java -ea -cp .:tests BrowserSeedSelfTest
+
+      - name: Build Java 17 CheerpJ artifact from canonical sources
+        run: |
+          python3 browser/build-browser.py --output ConceptLab-browser.jar
+          python3 browser/normalize-jar.py ConceptLab-browser.jar
+          jar --list --file ConceptLab-browser.jar | grep -q '^Main.class$'
+
+      - name: Run browser API contract tests
+        run: npm test
+
+      - name: Run browser static security checks
+        run: npm run verify:static
+
+      - name: Enforce portfolio punctuation policy
+        shell: bash
+        run: |
+          if grep -RInP '[\x{2010}-\x{2015}\x{2E3A}\x{2E3B}]' README.md docs/*.md; then
+            echo 'Long dash detected in public portfolio writing.'
+            exit 1
+          fi
+          echo 'Portfolio Markdown contains no em dashes or en dashes.'
+
+      - name: Scan public tree and browser artifact for Groq-style secrets
+        shell: bash
+        run: |
+          if grep -RInE 'gsk_[A-Za-z0-9_-]{20,}' . --exclude-dir=.git; then
+            echo 'Secret-like Groq credential detected in public repository.'
+            exit 1
+          fi
+          if strings ConceptLab-browser.jar | grep -E 'gsk_[A-Za-z0-9_-]{20,}'; then
+            echo 'Secret-like Groq credential detected in browser JAR.'
+            exit 1
+          fi
+          echo 'No Groq-style credentials detected.'
+
+      - name: Install virtual display support
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+
+      - name: Generate fresh UI captures from the real desktop application
+        run: |
+          mkdir -p "$RUNNER_TEMP/conceptlab-home"
+          xvfb-run -a -s '-screen 0 1920x1080x24' \
+            java -Duser.home="$RUNNER_TEMP/conceptlab-home" -cp .:tools PortfolioCapture
+
+      - name: Upload fresh capture artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conceptlab-portfolio-screenshots
+          path: docs/media/*.png
+          if-no-files-found: error
+
+      - name: Upload verified Java 17 browser artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conceptlab-browser-jar
+          path: ConceptLab-browser.jar
+          if-no-files-found: error

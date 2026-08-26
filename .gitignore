@@ -1,0 +1,49 @@
+# Secrets / local environment
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Java build output
+*.class
+*.jar
+*.war
+*.ear
+out/
+build/
+target/
+bin/
+
+# Browser / Vercel build output
+node_modules/
+dist/
+.vercel/
+
+# IDE metadata
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs / temporary files
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+
+# ConceptLab local user data
+*.clab
+conceptlab-data/
+
+# The public seeded demo is intentionally versioned despite the general .clab rule.
+!demo/
+!demo/newtonian-mechanics.clab

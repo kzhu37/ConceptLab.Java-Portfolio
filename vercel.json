@@ -1,0 +1,34 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "dnf install -y java-17-amazon-corretto-devel && npm install",
+  "buildCommand": "python3 browser/build-browser.py --output ConceptLab-browser.jar && python3 browser/normalize-jar.py ConceptLab-browser.jar && npm test && npm run verify:static && python3 browser/build-site.py",
+  "outputDirectory": "dist",
+  "functions": {
+    "api/conceptlab/ai.js": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" }
+      ]
+    },
+    {
+      "source": "/ConceptLab-browser.jar",
+      "headers": [
+        { "key": "Content-Type", "value": "application/java-archive" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/api/conceptlab/ai",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}
