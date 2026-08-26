@@ -1,14 +1,18 @@
-name: Verify and capture portfolio
+name: Verify ConceptLab portfolio
 
 on:
   push:
     branches: [main]
     paths-ignore:
       - 'docs/media/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - 'docs/media/**'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: conceptlab-portfolio-verify-${{ github.ref }}
@@ -38,6 +42,15 @@ jobs:
       - name: Run core self-tests
         run: java -ea -cp .:tests ConceptLabSelfTest
 
+      - name: Enforce portfolio punctuation policy
+        shell: bash
+        run: |
+          if grep -RInE '[—–]' README.md docs/*.md; then
+            echo 'Long dash detected in public portfolio writing.'
+            exit 1
+          fi
+          echo 'Portfolio Markdown contains no em dashes or en dashes.'
+
       - name: Scan public tree for Groq-style secrets
         shell: bash
         run: |
@@ -52,29 +65,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb
 
-      - name: Generate portfolio screenshots from the real application
+      - name: Generate fresh UI captures from the real application
         run: |
           mkdir -p "$RUNNER_TEMP/conceptlab-home"
           xvfb-run -a -s '-screen 0 1920x1080x24' \
             java -Duser.home="$RUNNER_TEMP/conceptlab-home" -cp .:tools PortfolioCapture
 
-      - name: Upload screenshot artifact
+      - name: Upload fresh capture artifact
         uses: actions/upload-artifact@v4
         with:
           name: conceptlab-portfolio-screenshots
           path: docs/media/*.png
           if-no-files-found: error
-
-      - name: Commit refreshed screenshots
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add docs/media/*.png
-          if git diff --cached --quiet; then
-            echo 'Screenshots are already current.'
-          else
-            git commit -m 'docs: refresh verified ConceptLab screenshots'
-            git pull --rebase origin main
-            git push origin HEAD:main
-          fi
