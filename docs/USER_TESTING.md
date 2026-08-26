@@ -8,7 +8,7 @@ Several people went beyond a one-time test and began using ConceptLab to support
 
 I use the wording **"60+ users and testers"** deliberately.
 
-The number represents people who used or tested ConceptLab during its development and iteration. It is not a monthly-active-user count, retention metric, or controlled study population.
+The number represents people who used or tested ConceptLab during development and iteration. It is not a monthly-active-user count, retention metric, or controlled study population.
 
 ConceptLab did not include production telemetry that measured:
 
@@ -18,9 +18,7 @@ ConceptLab did not include production telemetry that measured:
 - quantified grade improvement;
 - statistically measured learning outcomes.
 
-I therefore do not claim those metrics.
-
-The strongest outcome I can support is simpler: some friends, peers, and other users found the project useful enough to continue using it for their own learning after being introduced to it.
+The meaningful takeaway for me is simpler: some friends, peers, and other users found the project useful enough to continue using it for their own learning after being introduced to it.
 
 ## What I was trying to learn from testing
 
@@ -49,27 +47,11 @@ That changed the way I evaluated progress. A feature was no longer automatically
 | Framework and integration friction slowed iteration | Simplify the desktop stack and move from earlier JavaFX work to Swing |
 | Real generation failures were not isolated edge cases | Add validation, batching, retry behavior, token budgeting, duplicate filtering, and local fallback paths |
 
-These changes are more important to the portfolio than the raw tester count because they show how use and failure changed the engineering priorities.
+These changes mattered more to the project than the raw tester count because they changed what I built and what I prioritized.
 
-## Evidence standard for this portfolio
+## What I did not measure
 
-### Claims I make
-
-- ConceptLab was independently designed and developed by Kevin Zhu.
-- It was used or tested by 60+ people during development.
-- The testing group included friends, peers, and other users.
-- Several people adopted the project to support their own learning.
-- Testing and repeated use influenced the product decisions described above.
-
-### Claims I do not make
-
-- 60+ monthly active users;
-- a specific retention percentage;
-- a quantified increase in grades or test scores;
-- a specific number of generated study sessions;
-- controlled evidence that ConceptLab improves learning outcomes.
-
-Those claims would require telemetry or a more rigorous study that this project did not collect.
+ConceptLab did not have analytics for active-user counts, retention, grades, session totals, or controlled learning outcomes. I describe the testing as 60+ users and testers because that is what I actually tracked during development; I do not turn it into a production-adoption metric.
 
 ## Why this mattered
 
