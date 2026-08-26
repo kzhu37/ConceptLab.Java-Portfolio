@@ -96,24 +96,19 @@ def patch_main(source: str) -> str:
         }
         try {
             Files.createDirectories(setsDir);
+            Path demoTarget = setsDir.resolve("Newtonian_Mechanics.clab");
             boolean resetRequested = Boolean.parseBoolean(
                     System.getProperty("conceptlab.resetDemo", "false"));
             if (resetRequested) {
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(setsDir, "*.clab")) {
-                    for (Path file : stream) {
-                        Files.deleteIfExists(file);
-                    }
-                }
+                // Reset only the bundled portfolio demo. User-created or imported
+                // StudySets in the persistent browser profile must never be removed.
+                Files.deleteIfExists(demoTarget);
             }
 
-            boolean hasSet = false;
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(setsDir, "*.clab")) {
-                hasSet = stream.iterator().hasNext();
-            }
-            if (!hasSet) {
+            if (!Files.isRegularFile(demoTarget)) {
                 Path seed = Paths.get("/app/demo/newtonian-mechanics.clab");
                 if (Files.isRegularFile(seed)) {
-                    Files.copy(seed, setsDir.resolve("Newtonian_Mechanics.clab"));
+                    Files.copy(seed, demoTarget);
                 } else {
                     System.err.println("[ConceptLab][Browser] Demo seed file was not available at " + seed);
                 }
