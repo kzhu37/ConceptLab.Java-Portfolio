@@ -119,12 +119,23 @@ async function waitForRuntime(page) {
   }, null, { timeout: 30_000 });
 }
 
-async function readSeededSet(page) {
-  return page.evaluate(async () => {
-    if (typeof cjFileBlob !== "function") throw new Error("cjFileBlob is unavailable");
-    const blob = await cjFileBlob("/files/.conceptlab/sets/Newtonian_Mechanics.clab");
-    return blob.text();
-  });
+async function readSeededSet(page, timeoutMs = 60_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+  while (Date.now() < deadline) {
+    try {
+      const text = await page.evaluate(async () => {
+        if (typeof cjFileBlob !== "function") return null;
+        const blob = await cjFileBlob("/files/.conceptlab/sets/Newtonian_Mechanics.clab");
+        return blob ? blob.text() : null;
+      });
+      if (typeof text === "string" && text.length > 0) return text;
+    } catch (error) {
+      lastError = error;
+    }
+    await sleep(500);
+  }
+  throw lastError || new Error("seeded Newtonian Mechanics StudySet did not become available");
 }
 
 async function verifyBrowserRuntime() {
