@@ -3,15 +3,20 @@
 </p>
 
 <p align="center">
-  <strong>A Java desktop study platform I built to turn learning material into application-focused practice, feedback, and reusable StudySets.</strong>
+  <strong>A Java study platform I built to turn learning material into application-focused practice, feedback, and reusable StudySets.</strong>
 </p>
 
 <p align="center">
-  Java · Swing/AWT · Java HTTP Client · Groq API · local file persistence
+  Java · Swing/AWT · CheerpJ · Java HTTP Client · Groq API · Vercel · local file persistence
+</p>
+
+<p align="center">
+  <a href="https://conceptlab-browser-xiangseanzhu-7370.vercel.app"><strong>Run ConceptLab in your browser</strong></a>
 </p>
 
 <p align="center">
   <a href="#why-i-built-it">Why</a> ·
+  <a href="#browser-edition">Browser</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
   <a href="#product-workflow">Product</a> ·
   <a href="#development-decisions-and-iteration">Iteration</a> ·
@@ -38,11 +43,29 @@
 
 ConceptLab began with a problem I kept seeing around me: people could spend hours reviewing notes and memorizing definitions, then struggle when a test changed the context and asked them to **apply** what they knew.
 
-I wanted to build something that treated that gap as the center of the study process. Instead of stopping at flashcards, ConceptLab connects source material, practice, testing, feedback, review, and saved progress in one local desktop workflow.
+I wanted to build something that treated that gap as the center of the study process. Instead of stopping at flashcards, ConceptLab connects source material, practice, testing, feedback, review, and saved progress in one workflow.
 
 > **Design principle:** application matters more than memorization alone, and feedback should be part of learning rather than only the score at the end.
 
 That principle became both a product decision and an engineering requirement. Fresh questions should not simply repeat familiar wording. Generated content should not enter the application just because an API returned it. A feature should not remain merely because it is technically possible.
+
+## Browser edition
+
+ConceptLab was originally built as a Java/Swing desktop application. For this portfolio, I wanted reviewers to be able to use the real application without installing Java or entering an API key, while preserving the desktop program rather than replacing it with a look-alike web rewrite.
+
+The browser edition therefore runs the Java/Swing application through **CheerpJ Core 4.3**. A reproducible build script compiles the canonical Java sources to a Java 17 browser artifact while the normal desktop application remains a JDK 21 build. Browser-only boundary changes are applied during that artifact build instead of maintaining a second application codebase.
+
+The browser architecture adds three boundaries around the original application:
+
+1. **Java runtime:** CheerpJ executes the real Swing application in the browser.
+2. **Persistence:** browser StudySets live under CheerpJ's persistent `/files` filesystem, with a resettable Newtonian Mechanics demo seeded for reviewers.
+3. **AI security:** browser AI requests go to a constrained same-origin Vercel function. Groq credentials stay server-side and never need to be entered by a reviewer or embedded in the browser JAR.
+
+The production browser strategy uses `openai/gpt-oss-20b` first because ConceptLab favors fast, dependable structured generation, with `openai/gpt-oss-120b` available as a backup path. The server bridge restricts requests to ConceptLab's known task contracts, applies strict JSON Schema output constraints, bounds request and output size, rate-limits public use, and can fail over across private server-side credentials.
+
+The browser application also makes generation state visible to users. Loading dialogs can report primary generation, retrying, backup generation, batch progress, validation, partial success, and failure. A failed operation offers a retry and explicitly states that the existing StudySet was not modified.
+
+**Live browser:** [conceptlab-browser-xiangseanzhu-7370.vercel.app](https://conceptlab-browser-xiangseanzhu-7370.vercel.app)
 
 ## At a glance
 
@@ -52,9 +75,10 @@ That principle became both a product decision and an engineering requirement. Fr
 | **Fresh practice** | Generates configurable quizzes with difficulty, MCQ/open-response mix, challenge questions, seen-question avoidance, and optional answer uniqueness. |
 | **Feedback loop** | Evaluates responses, explains mistakes, and connects questions back to related resources and flashcards. |
 | **Technical centerpiece** | Treats generated output as untrusted data through structured contracts, validation, batching, retries, duplicate filtering, and local fallback paths. |
+| **Browser delivery** | Runs the real Java/Swing application with CheerpJ, persistent browser StudySets, a seeded demo, and a server-side Vercel AI bridge. |
 | **Persistence** | Stores StudySets locally in a versioned text format with validation, escaping, and backward-compatible parsing. |
 | **Real use** | Used or tested by **60+ people during development**; repeated use directly influenced practice, feedback, workflow, and reliability decisions. |
-| **Verification** | Compiles and tests on JDK 21, scans for exposed credentials, and drives the real Swing UI in a virtual display. |
+| **Verification** | Checks the JDK 21 desktop build, Java 17 browser artifact, persistence models, AI bridge contracts, secret exposure, real Swing capture, and live browser smoke behavior. |
 
 ## Engineering highlights
 
@@ -84,7 +108,7 @@ This is one of the project's clearest engineering connections: **if the learning
 
 I chose a local-first persistence model rather than adding a database simply because it would make the stack longer.
 
-Each StudySet is stored under the user's home directory in a versioned `.clab` format. [`StudySet.java`](StudySet.java) stores metadata, flashcards, practice questions, unit-test questions, resources, and the best unit-test score. The loader verifies declared section counts and recognizes older question-record formats.
+Each desktop StudySet is stored under the user's home directory in a versioned `.clab` format. In the browser, the same persistence model is mapped into CheerpJ's persistent browser filesystem. [`StudySet.java`](StudySet.java) stores metadata, flashcards, practice questions, unit-test questions, resources, and the best unit-test score. The loader verifies declared section counts and recognizes older question-record formats.
 
 User-authored content can contain pipes, backslashes, and newlines, so [`EscapeUtil.java`](EscapeUtil.java) explicitly escapes and restores reserved characters so content can round-trip without corrupting the file format.
 
@@ -143,6 +167,7 @@ ConceptLab became stronger when I stopped treating added functionality as the sa
 | Early development rewarded adding features | Shift from feature-first to utility-first design | Kept the product focused on the learning loop instead of accumulating unnecessary controls |
 | Detailed analytics would add storage and interface complexity without solving the core problem | Keep only the best unit-test score | Preserved useful progress feedback while keeping the persistence model simple |
 | Model responses could be malformed, truncated, repetitive, rate-limited, or unavailable | Add structured contracts, validation, batching, retries, token budgeting, duplicate filtering, and fallback paths | Turned generation from a single API call into a guarded pipeline |
+| A public browser demo could have exposed a provider credential or required a second UI implementation | Keep secrets behind a narrow server bridge and run the original Swing application through CheerpJ | Preserved the real application while making it accessible to reviewers without an API key |
 | Testing with other users made clarity and usefulness more important than the feature checklist | Make practice configurable and connect mistakes back to learning material | Shifted the product toward a clearer repeatable study workflow |
 
 The most important design lesson was **more complexity does not automatically make a better product**.
@@ -157,18 +182,24 @@ ConceptLab did not collect production telemetry for monthly active users, retent
 
 ## Verification and reproducibility
 
-The public portfolio is continuously checked through [`.github/workflows/verify-and-capture.yml`](.github/workflows/verify-and-capture.yml).
+The portfolio uses several independent verification layers rather than treating a successful compile as sufficient evidence.
 
-On each relevant push or pull request, the workflow:
+The core workflow in [`.github/workflows/verify-and-capture.yml`](.github/workflows/verify-and-capture.yml):
 
-1. compiles the actual Java application on **JDK 21**;
+1. compiles the actual desktop application on **JDK 21**;
 2. compiles and runs the dependency-free core self-tests in [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java);
-3. rejects em dashes and en dashes from the public Markdown portfolio writing;
-4. scans the public tree for Groq-style credentials;
-5. launches the real Swing application inside a virtual display;
-6. drives the interface using an isolated demo StudySet and uploads fresh UI captures as a workflow artifact.
+3. validates the bundled Newtonian Mechanics browser StudySet;
+4. builds a **Java 17** CheerpJ artifact from the canonical Java sources;
+5. runs browser AI contract tests and static security checks;
+6. rejects Groq-style credential markers from the public tree and browser artifact;
+7. launches the real Swing application inside a virtual display;
+8. drives the interface using an isolated demo StudySet and uploads fresh UI captures as workflow artifacts.
 
-The self-tests cover escaping round-trips, question invariants, resource URL validation, StudySet save/load round-trips, duplicate protection across practice and unit-test banks, declared-count corruption, legacy question loading, and malformed persisted records.
+The browser API tests cover accepted ConceptLab task shapes, model whitelisting, prompt-size limits, same-origin behavior, strict schema construction, provider-response validation, transient provider failure handling, credential failover, and safe error redaction.
+
+[`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs) and [`.github/workflows/production-browser-smoke.yml`](.github/workflows/production-browser-smoke.yml) add a public deployment gate. The smoke test checks the deployed static surface and JAR for credential markers, exercises a real structured AI request through the production bridge, starts the CheerpJ Java runtime in Chromium, verifies the seeded StudySet, checks persistence across refresh, exercises Reset Demo, and captures browser evidence for review.
+
+The desktop self-tests cover escaping round-trips, question invariants, resource URL validation, StudySet save/load round-trips, duplicate protection across practice and unit-test banks, declared-count corruption, legacy question loading, and malformed persisted records.
 
 The screenshots checked into this README are generated through the same [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java) path. CI verifies that the application can still produce fresh captures, but it does not automatically commit binary screenshot changes back to the repository. This keeps the evidence reproducible without filling the public history with bot-generated image commits.
 
@@ -176,11 +207,13 @@ This verification layer exists for the same reason as the generation safeguards:
 
 ## Architecture and trade-offs
 
-ConceptLab is a local-first Java desktop application.
+ConceptLab remains fundamentally a local-first Java application. The desktop build runs directly on the JDK, while the portfolio browser build places a thin runtime and security boundary around the same source.
 
 The durable model layer is separated into focused classes, but the application and service responsibilities remain concentrated in [`Main.java`](Main.java). `Main` currently handles Swing screen construction, navigation, generation orchestration, API communication, quiz lifecycle, persistence coordination, and several utility concerns.
 
 I do not present that as an ideal final architecture. If this were developed into a longer-term production system, the clearest next step would be to separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over performing a late refactor only to make the repository look more modular.
+
+The browser build also deliberately avoids changing that architecture into a web framework. [`browser/build-browser.py`](browser/build-browser.py) applies a small set of browser-only boundary patches, while [`api/conceptlab/ai.js`](api/conceptlab/ai.js) handles the one capability that must stay outside the public browser runtime: privileged AI credentials.
 
 That trade-off is documented in more detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -197,11 +230,12 @@ I owned the project end to end:
 - integrating and hardening the Groq generation pipeline;
 - debugging API, output, persistence, and interface failures;
 - testing the product with other users and changing priorities based on what was useful;
+- adapting the real Java/Swing application for a secure browser portfolio deployment;
 - preparing the reproducible public portfolio presentation.
 
 Development tools, including AI-assisted coding tools, were part of the programming workflow. The product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.
 
-> **Portfolio provenance:** This repository is a curated public portfolio version of ConceptLab. Its visible Git history primarily reflects public cleanup, verification, and presentation work rather than the project's complete development timeline.
+> **Portfolio provenance:** This repository is a curated public portfolio version of ConceptLab. Its visible Git history primarily reflects public cleanup, verification, browser deployment work, and presentation rather than the project's complete development timeline.
 
 ## Technology
 
@@ -209,12 +243,15 @@ Development tools, including AI-assisted coding tools, were part of the programm
 | --- | --- |
 | Desktop application | Java 21 |
 | Interface | Swing and AWT |
+| Browser runtime | CheerpJ Core 4.3 running a Java 17 artifact built from the canonical sources |
 | Networking | Java HTTP Client |
 | Generative system | Groq OpenAI-compatible API |
-| Structured output | Custom dependency-free JSON parser plus domain validation |
-| Persistence | Versioned local `.clab` files |
+| Browser AI boundary | Vercel Function with private server-side credentials and strict task contracts |
+| Structured output | Custom dependency-free JSON parser, strict provider schemas, and domain validation |
+| Persistence | Versioned local `.clab` files, mapped to CheerpJ persistent storage in browser mode |
 | Concurrency | `SwingWorker` for background generation and grading flows |
-| Verification | GitHub Actions, Java assertions, reproducible UI capture |
+| Verification | GitHub Actions, Java assertions, Node contract tests, Playwright, reproducible UI capture |
+| Hosting | Vercel |
 | Version control | Git and GitHub |
 
 ## Core source structure
@@ -226,8 +263,13 @@ Development tools, including AI-assisted coding tools, were part of the programm
 - **[`ResourceLink.java`](ResourceLink.java) and [`ResourceType.java`](ResourceType.java):** validated external learning resources and categories.
 - **[`EscapeUtil.java`](EscapeUtil.java):** escaping helpers for the custom persistence format.
 - **[`LoadingScreenFacts.java`](LoadingScreenFacts.java):** lightweight educational content displayed during background work.
+- **[`browser/build-browser.py`](browser/build-browser.py):** reproducibly adapts the canonical desktop sources into the Java 17 CheerpJ artifact without maintaining a second application implementation.
+- **[`browser/build-site.py`](browser/build-site.py):** assembles the static browser deployment.
+- **[`api/conceptlab/ai.js`](api/conceptlab/ai.js):** constrained server-side browser bridge for Groq generation.
 - **[`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java):** dependency-free regression and smoke checks for the core model and persistence layer.
-- **[`tools/PortfolioCapture.java`](tools/PortfolioCapture.java):** reproducible UI driver that launches and navigates the real application to produce portfolio captures.
+- **[`tests/browser-api.test.js`](tests/browser-api.test.js):** browser bridge contract, schema, failover, and failure-safety checks.
+- **[`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs):** public deployment smoke test for Java startup, persistence, reset, AI, and credential exposure.
+- **[`tools/PortfolioCapture.java`](tools/PortfolioCapture.java):** reproducible UI driver that launches and navigates the real desktop application to produce portfolio captures.
 
 ## Run locally
 
@@ -249,6 +291,8 @@ GROQ_API_KEY_SECONDARY=your_optional_secondary_key_here
 
 [`.env.example`](.env.example) documents the variable names. The Java application reads values from the process environment, so set them in your shell or IDE before launching.
 
+The public browser deployment does not require reviewers to configure these variables. Its credentials are private Vercel environment variables and are only used by the same-origin server bridge.
+
 ### Compile and run
 
 ```bash
@@ -256,7 +300,7 @@ javac *.java
 java Main
 ```
 
-StudySets are stored under:
+Desktop StudySets are stored under:
 
 ```text
 ~/.conceptlab/sets/
@@ -283,6 +327,8 @@ ConceptLab changed the way I think about engineering.
 **Treat external behavior defensively.** Model output, saved files, and external resources should be validated before the rest of the application trusts them.
 
 **Simplify deliberately.** Replacing a difficult framework, keeping local storage instead of adding a database, and limiting analytics were engineering decisions, not missing ambition.
+
+**Preserve the real system when adapting it.** Making ConceptLab browser-accessible was more meaningful when the browser ran the actual Java/Swing application instead of a separate interface that only resembled it.
 
 **Connect technical choices to the user experience.** Duplicate prevention matters because repetitive practice is weak practice. Background work matters because a frozen interface feels broken. Feedback matters because an error should become the next learning step.
 
