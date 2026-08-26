@@ -1,9 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { __test } from "../api/conceptlab/ai.js";
+import handler, { __test } from "../api/conceptlab/ai.js";
 
 function request(headers = {}) {
   return {
+    method: "POST",
+    body: null,
+    socket: { remoteAddress: "127.0.0.1" },
     headers: {
       host: "conceptlab.example.test",
       origin: "https://conceptlab.example.test",
@@ -24,6 +27,68 @@ function body(system, user, model = "openai/gpt-oss-20b") {
       { role: "system", content: system },
       { role: "user", content: user },
     ],
+  };
+}
+
+function responseRecorder() {
+  return {
+    statusCode: 200,
+    headers: new Map(),
+    payload: null,
+    setHeader(name, value) {
+      this.headers.set(String(name).toLowerCase(), String(value));
+    },
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(value) {
+      this.payload = value;
+      return value;
+    },
+  };
+}
+
+async function withProviderEnvironment(keys, fetchImpl, fn) {
+  const oldPrimary = process.env.GROQ_API_KEY_PRIMARY;
+  const oldSecondary = process.env.GROQ_API_KEY_SECONDARY;
+  const oldFetch = global.fetch;
+  try {
+    if (keys.primary === undefined) delete process.env.GROQ_API_KEY_PRIMARY;
+    else process.env.GROQ_API_KEY_PRIMARY = keys.primary;
+    if (keys.secondary === undefined) delete process.env.GROQ_API_KEY_SECONDARY;
+    else process.env.GROQ_API_KEY_SECONDARY = keys.secondary;
+    global.fetch = fetchImpl;
+    await fn();
+  } finally {
+    if (oldPrimary === undefined) delete process.env.GROQ_API_KEY_PRIMARY;
+    else process.env.GROQ_API_KEY_PRIMARY = oldPrimary;
+    if (oldSecondary === undefined) delete process.env.GROQ_API_KEY_SECONDARY;
+    else process.env.GROQ_API_KEY_SECONDARY = oldSecondary;
+    global.fetch = oldFetch;
+  }
+}
+
+function validQuestionEnvelope() {
+  return {
+    id: "chatcmpl-test",
+    choices: [{
+      finish_reason: "stop",
+      message: {
+        role: "assistant",
+        content: JSON.stringify({
+          questions: [{
+            topic: "Forces",
+            response_type: "MCQ",
+            prompt: "Which statement best describes net force?",
+            choices: ["Vector sum of forces", "Mass", "Speed", "Energy"],
+            correct_index: 0,
+            difficulty: 0.5,
+            challenge: false,
+          }],
+        }),
+      },
+    }],
   };
 }
 
@@ -107,5 +172,94 @@ test("only the two reviewed production models are whitelisted", () => {
   assert.deepEqual(
     [...__test.ALLOWED_MODELS].sort(),
     ["openai/gpt-oss-120b", "openai/gpt-oss-20b"].sort(),
+  );
+});
+
+test("unconfigured server fails safely without attempting a provider call", async () => {
+  let calls = 0;
+  await withProviderEnvironment({}, async () => {
+    calls += 1;
+    throw new Error("provider should not be called");
+  }, async () => {
+    const req = request({ "x-forwarded-for": "test-unconfigured" });
+    req.body = body(QUESTION_SYSTEM, "HARD COUNT: questions.len=1 EXACT; INPUT:title=Forces");
+    const res = responseRecorder();
+    await handler(req, res);
+    assert.equal(res.statusCode, 503);
+    assert.equal(res.payload.error.category, "service_not_configured");
+    assert.equal(res.payload.error.retryable, true);
+    assert.equal(calls, 0);
+  });
+});
+
+test("provider 429 on the primary key falls through to the secondary key", async () => {
+  let calls = 0;
+  await withProviderEnvironment(
+    { primary: "primary-test-key", secondary: "secondary-test-key" },
+    async () => {
+      calls += 1;
+      if (calls === 1) {
+        return new Response(JSON.stringify({ error: { message: "rate limited" } }), {
+          status: 429,
+          headers: { "content-type": "application/json", "retry-after": "1" },
+        });
+      }
+      return new Response(JSON.stringify(validQuestionEnvelope()), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    async () => {
+      const req = request({ "x-forwarded-for": "test-key-failover" });
+      req.body = body(QUESTION_SYSTEM, "HARD COUNT: questions.len=1 EXACT; INPUT:title=Forces");
+      const res = responseRecorder();
+      await handler(req, res);
+      assert.equal(res.statusCode, 200);
+      assert.equal(calls, 2);
+      assert.equal(typeof res.payload.choices[0].message.content, "string");
+    },
+  );
+});
+
+test("malformed provider output is rejected instead of forwarded to the app", async () => {
+  await withProviderEnvironment(
+    { primary: "primary-test-key" },
+    async () => new Response(JSON.stringify({
+      choices: [{ message: { content: "not valid json" } }],
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }),
+    async () => {
+      const req = request({ "x-forwarded-for": "test-invalid-provider" });
+      req.body = body(QUESTION_SYSTEM, "HARD COUNT: questions.len=1 EXACT; INPUT:title=Forces");
+      const res = responseRecorder();
+      await handler(req, res);
+      assert.equal(res.statusCode, 502);
+      assert.equal(res.payload.error.category, "invalid_generated_response");
+      assert.equal(res.payload.error.retryable, true);
+    },
+  );
+});
+
+test("provider error bodies and credentials are never echoed to the browser", async () => {
+  const secretMarker = "gsk_DO_NOT_ECHO_THIS_TEST_SECRET_123456789";
+  await withProviderEnvironment(
+    { primary: secretMarker },
+    async () => new Response(JSON.stringify({
+      error: { message: `upstream rejected ${secretMarker}` },
+    }), {
+      status: 401,
+      headers: { "content-type": "application/json" },
+    }),
+    async () => {
+      const req = request({ "x-forwarded-for": "test-secret-redaction" });
+      req.body = body(QUESTION_SYSTEM, "HARD COUNT: questions.len=1 EXACT; INPUT:title=Forces");
+      const res = responseRecorder();
+      await handler(req, res);
+      assert.equal(res.statusCode, 502);
+      assert.equal(res.payload.error.category, "provider_rejected_request");
+      assert.equal(JSON.stringify(res.payload).includes(secretMarker), false);
+    },
   );
 });
