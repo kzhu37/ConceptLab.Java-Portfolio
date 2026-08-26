@@ -15,6 +15,11 @@ build/
 target/
 bin/
 
+# Browser / Vercel build output
+node_modules/
+dist/
+.vercel/
+
 # IDE metadata
 .idea/
 *.iml
@@ -38,3 +43,7 @@ desktop.ini
 # ConceptLab local user data
 *.clab
 conceptlab-data/
+
+# The public seeded demo is intentionally versioned despite the general .clab rule.
+!demo/
+!demo/newtonian-mechanics.clab
