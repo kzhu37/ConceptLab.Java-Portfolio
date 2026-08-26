@@ -60,6 +60,14 @@
         },
       });
 
+      setStatus("Preparing the bundled demo StudySet...");
+      const seedResponse = await fetch("/demo/newtonian-mechanics.clab", { cache: "no-store" });
+      if (!seedResponse.ok) {
+        throw new Error(`Demo StudySet unavailable (HTTP ${seedResponse.status})`);
+      }
+      const seedText = await seedResponse.text();
+      cheerpOSAddStringFile("/str/conceptlab-demo.clab", seedText);
+
       setStatus("Starting the real ConceptLab Swing application...");
       progress.style.width = "96%";
       cheerpjCreateDisplay(-1, -1, display);
