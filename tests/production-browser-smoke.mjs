@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { chromium } from "playwright";
 
 const BASE_URL = (process.env.CONCEPTLAB_BASE_URL || "https://conceptlab-browser-xiangseanzhu-7370.vercel.app").replace(/\/$/, "");
+const EXPECTED_COMMIT = process.env.GITHUB_SHA || "";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchWithRetry(path, options = {}, attempts = 60) {
@@ -18,6 +19,33 @@ async function fetchWithRetry(path, options = {}, attempts = 60) {
     if (attempt < attempts) await sleep(10_000);
   }
   throw lastError || new Error(`Could not fetch ${path}`);
+}
+
+async function waitForCurrentDeployment() {
+  if (!EXPECTED_COMMIT) return;
+  let lastSeen = "none";
+  for (let attempt = 1; attempt <= 60; attempt += 1) {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/build-meta.json?expected=${encodeURIComponent(EXPECTED_COMMIT)}`,
+        { cache: "no-store", redirect: "follow" },
+      );
+      if (response.ok) {
+        const meta = await response.json();
+        lastSeen = typeof meta?.gitCommit === "string" ? meta.gitCommit : "invalid metadata";
+        if (lastSeen === EXPECTED_COMMIT) {
+          console.log(`Production deployment is current at ${EXPECTED_COMMIT}.`);
+          return;
+        }
+      } else {
+        lastSeen = `HTTP ${response.status}`;
+      }
+    } catch (error) {
+      lastSeen = error instanceof Error ? error.message : String(error);
+    }
+    if (attempt < 60) await sleep(10_000);
+  }
+  throw new Error(`Production did not reach expected commit ${EXPECTED_COMMIT}; last seen ${lastSeen}`);
 }
 
 function assertNoCredentialMarker(bytes, label) {
@@ -148,7 +176,7 @@ async function verifyBrowserRuntime() {
       if (message.type() === "error") consoleErrors.push(message.text());
     });
 
-    await page.goto(BASE_URL, { waitUntil: "domcontentloaded", timeout: 90_000 });
+    await page.goto(`${BASE_URL}/?build=${encodeURIComponent(EXPECTED_COMMIT || "current")}`, { waitUntil: "domcontentloaded", timeout: 90_000 });
     await waitForRuntime(page);
     const firstSeed = await readSeededSet(page);
     assert.match(firstSeed, /^CONCEPTLAB_STUDYSET\|v4/m);
@@ -173,6 +201,7 @@ async function verifyBrowserRuntime() {
   }
 }
 
+await waitForCurrentDeployment();
 await verifyStaticSurface();
 await verifyProductionAi();
 await verifyBrowserRuntime();
