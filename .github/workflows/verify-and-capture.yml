@@ -2,7 +2,7 @@ name: Verify ConceptLab portfolio
 
 on:
   push:
-    branches: [main]
+    branches: [main, browser-deployment]
     paths-ignore:
       - 'docs/media/**'
   pull_request:
