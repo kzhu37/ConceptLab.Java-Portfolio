@@ -1,8 +1,8 @@
 # ConceptLab Architecture
 
-[Back to the portfolio README](../README.md)
+[Back to the README](../README.md)
 
-This document is the technical companion to the main ConceptLab portfolio page. It explains the engineering decisions behind the application without forcing every implementation detail into the first page a reviewer sees.
+This document is the technical companion to the main ConceptLab README. I keep the deeper implementation details here so the top-level project overview can stay focused on the product and its main engineering decisions.
 
 ## Engineering priorities
 
@@ -263,6 +263,6 @@ If I were continuing the project as a longer-term production system, the cleares
 - `QuizService` for assessment generation and answer evaluation;
 - the JSON parser into its own utility class.
 
-I have not presented the current code as more modular than it is. For this project, stabilizing the complete working product and validating the learning workflow took priority over a late architectural rewrite purely for appearance.
+`Main.java` is still larger than I would want long-term. For this version, stabilizing the complete working product and validating the learning workflow took priority over a late structural rewrite.
 
-That trade-off is part of the engineering record: the goal of the portfolio is to show what was actually built, why the decisions were made, and where the next technical boundary lies.
+That trade-off is part of the project's development history: it explains what I chose to stabilize first and where I would split the system next.
