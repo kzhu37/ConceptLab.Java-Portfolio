@@ -21,7 +21,7 @@ concurrency:
 jobs:
   verify-and-capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Check out repository
@@ -33,14 +33,34 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Compile application
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Compile desktop application on JDK 21
         run: javac *.java
 
       - name: Compile verification tools
-        run: javac -cp . tests/ConceptLabSelfTest.java tools/PortfolioCapture.java
+        run: javac -cp . tests/ConceptLabSelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
 
       - name: Run core self-tests
         run: java -ea -cp .:tests ConceptLabSelfTest
+
+      - name: Verify bundled browser demo StudySet
+        run: java -ea -cp .:tests BrowserSeedSelfTest
+
+      - name: Build Java 17 CheerpJ artifact from canonical sources
+        run: |
+          python3 browser/build-browser.py --output ConceptLab-browser.jar
+          python3 browser/normalize-jar.py ConceptLab-browser.jar
+          jar --list --file ConceptLab-browser.jar | grep -q '^Main.class$'
+
+      - name: Run browser API contract tests
+        run: npm test
+
+      - name: Run browser static security checks
+        run: npm run verify:static
 
       - name: Enforce portfolio punctuation policy
         shell: bash
@@ -51,11 +71,15 @@ jobs:
           fi
           echo 'Portfolio Markdown contains no em dashes or en dashes.'
 
-      - name: Scan public tree for Groq-style secrets
+      - name: Scan public tree and browser artifact for Groq-style secrets
         shell: bash
         run: |
           if grep -RInE 'gsk_[A-Za-z0-9_-]{20,}' . --exclude-dir=.git; then
             echo 'Secret-like Groq credential detected in public repository.'
+            exit 1
+          fi
+          if strings ConceptLab-browser.jar | grep -E 'gsk_[A-Za-z0-9_-]{20,}'; then
+            echo 'Secret-like Groq credential detected in browser JAR.'
             exit 1
           fi
           echo 'No Groq-style credentials detected.'
@@ -65,7 +89,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb
 
-      - name: Generate fresh UI captures from the real application
+      - name: Generate fresh UI captures from the real desktop application
         run: |
           mkdir -p "$RUNNER_TEMP/conceptlab-home"
           xvfb-run -a -s '-screen 0 1920x1080x24' \
@@ -76,4 +100,11 @@ jobs:
         with:
           name: conceptlab-portfolio-screenshots
           path: docs/media/*.png
+          if-no-files-found: error
+
+      - name: Upload verified Java 17 browser artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: conceptlab-browser-jar
+          path: ConceptLab-browser.jar
           if-no-files-found: error
