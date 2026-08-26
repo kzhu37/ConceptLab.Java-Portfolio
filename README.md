@@ -34,8 +34,6 @@
   </tr>
 </table>
 
-*These screenshots are captured from the real Swing application by the repository's portfolio capture tool using an isolated demo StudySet. They are not interface mockups.*
-
 ## Why I built it
 
 ConceptLab began with a problem I kept seeing around me: people could spend hours reviewing notes and memorizing definitions, then struggle when a test changed the context and asked them to **apply** what they knew.
