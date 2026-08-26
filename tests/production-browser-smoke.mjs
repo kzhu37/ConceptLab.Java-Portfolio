@@ -113,7 +113,10 @@ async function waitForRuntime(page) {
     const status = document.querySelector("#runtime-status");
     return status && /ConceptLab Java is running/i.test(status.textContent || "");
   }, null, { timeout: 150_000 });
-  await page.waitForFunction(() => document.querySelectorAll("canvas").length > 0, null, { timeout: 30_000 });
+  await page.waitForFunction(() => {
+    const host = document.querySelector("#conceptlab-display");
+    return Boolean(host && host.children.length > 0 && host.getBoundingClientRect().height > 0);
+  }, null, { timeout: 30_000 });
 }
 
 async function readSeededSet(page) {
