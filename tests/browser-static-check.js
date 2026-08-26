@@ -21,6 +21,13 @@ assert.match(api, /openai\/gpt-oss-120b/);
 assert.match(api, /type:\s*"json_schema"/);
 assert.match(api, /strict:\s*true/);
 assert.match(build, /javac.*--release/si);
+
+// Reset Demo must only replace the bundled demo file. It must never sweep all
+// persisted .clab files because reviewers may have created or imported their own sets.
+assert.match(build, /Path demoTarget = setsDir\.resolve\("Newtonian_Mechanics\.clab"\)/);
+assert.match(build, /Files\.deleteIfExists\(demoTarget\)/);
+assert.doesNotMatch(build, /if \(resetRequested\)[\s\S]{0,700}newDirectoryStream\(setsDir, "\*\.clab"\)/);
+
 assert.doesNotMatch(index + browser + api + build, /gsk_[A-Za-z0-9_-]{20,}/);
 assert.doesNotMatch(index + browser, /GROQ_API_KEY/);
 
