@@ -2,6 +2,8 @@
 """Assemble the static files that Vercel serves for the browser edition."""
 from __future__ import annotations
 
+import json
+import os
 import shutil
 from pathlib import Path
 
@@ -32,6 +34,15 @@ def main() -> None:
     if not demo_source.is_dir():
         raise FileNotFoundError("Required demo directory is missing")
     shutil.copytree(demo_source, DIST / "demo")
+
+    build_meta = {
+        "gitCommit": os.environ.get("VERCEL_GIT_COMMIT_SHA", "local"),
+        "gitRef": os.environ.get("VERCEL_GIT_COMMIT_REF", "local"),
+    }
+    (DIST / "build-meta.json").write_text(
+        json.dumps(build_meta, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
 
     print("Browser site assembled in dist/")
 
