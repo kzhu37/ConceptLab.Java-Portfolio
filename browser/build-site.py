@@ -13,7 +13,6 @@ STATIC_FILES = [
     "browser.css",
     "browser.js",
     "ConceptLabLogo.svg",
-    "ConceptLabLogo.png",
     "ConceptLab-browser.jar",
 ]
 
