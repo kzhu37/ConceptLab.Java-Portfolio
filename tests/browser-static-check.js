@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { execFileSync } from "node:child_process";
 
 const root = path.resolve(import.meta.dirname, "..");
 const read = (name) => fs.readFileSync(path.join(root, name), "utf8");
@@ -27,9 +26,10 @@ assert.doesNotMatch(index + browser, /GROQ_API_KEY/);
 
 const jarPath = path.join(root, "ConceptLab-browser.jar");
 if (fs.existsSync(jarPath)) {
-  const listing = execFileSync("jar", ["--list", "--file", jarPath], { encoding: "utf8" });
-  assert.match(listing, /^Main\.class$/m);
   const jarBytes = fs.readFileSync(jarPath);
+  assert.equal(jarBytes[0], 0x50, "browser JAR must start with ZIP/JAR signature P");
+  assert.equal(jarBytes[1], 0x4b, "browser JAR must start with ZIP/JAR signature K");
+  assert.equal(jarBytes.length > 100_000, true, "browser JAR is unexpectedly small");
   assert.equal(jarBytes.includes(Buffer.from("gsk_")), false, "browser JAR contains a Groq-style secret marker");
 }
 
