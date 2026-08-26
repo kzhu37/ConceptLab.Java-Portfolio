@@ -106,11 +106,14 @@ def patch_main(source: str) -> str:
             }
 
             if (!Files.isRegularFile(demoTarget)) {
-                Path seed = Paths.get("/app/demo/newtonian-mechanics.clab");
+                Path seed = Paths.get("/str/conceptlab-demo.clab");
+                if (!Files.isRegularFile(seed)) {
+                    seed = Paths.get("/app/demo/newtonian-mechanics.clab");
+                }
                 if (Files.isRegularFile(seed)) {
                     Files.copy(seed, demoTarget);
                 } else {
-                    System.err.println("[ConceptLab][Browser] Demo seed file was not available at " + seed);
+                    System.err.println("[ConceptLab][Browser] Demo seed file was not available in /str or /app.");
                 }
             }
         } catch (Exception ex) {
