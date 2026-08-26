@@ -153,26 +153,26 @@ ConceptLab was used or tested by **60+ people during development**, including fr
 
 What mattered most was what testing changed. Repeated use reinforced the need for less repetitive practice, configurable quizzes, useful feedback after mistakes, a clearer workflow, and greater reliability when generation failed.
 
-ConceptLab did not collect production telemetry for monthly active users, retention, session counts, or measured grade improvements, so I do not claim those metrics. The evidence standard and claim boundaries are documented in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
+ConceptLab did not collect production telemetry for monthly active users, retention, session counts, or measured grade improvements, so I do not attach those kinds of metrics to the project. More context on who tested it and what changed is in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
 
 ## Verification and reproducibility
 
-The public portfolio is continuously checked through [`.github/workflows/verify-and-capture.yml`](.github/workflows/verify-and-capture.yml).
+The repository is continuously checked through [`.github/workflows/verify-and-capture.yml`](.github/workflows/verify-and-capture.yml).
 
 On each relevant push or pull request, the workflow:
 
 1. compiles the actual Java application on **JDK 21**;
 2. compiles and runs the dependency-free core self-tests in [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java);
-3. rejects em dashes and en dashes from the public Markdown portfolio writing;
+3. checks the public Markdown against the repository's formatting rules;
 4. scans the public tree for Groq-style credentials;
 5. launches the real Swing application inside a virtual display;
 6. drives the interface using an isolated demo StudySet and uploads fresh UI captures as a workflow artifact.
 
 The self-tests cover escaping round-trips, question invariants, resource URL validation, StudySet save/load round-trips, duplicate protection across practice and unit-test banks, declared-count corruption, legacy question loading, and malformed persisted records.
 
-The screenshots checked into this README are generated through the same [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java) path. CI verifies that the application can still produce fresh captures, but it does not automatically commit binary screenshot changes back to the repository. This keeps the evidence reproducible without filling the public history with bot-generated image commits.
+The screenshots in this README are generated through the same [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java) path. CI confirms that the application can still produce fresh captures without automatically committing binary screenshot changes back to the repository.
 
-This verification layer exists for the same reason as the generation safeguards: **a portfolio claim is stronger when the repository can reproduce the evidence behind it.**
+This verification layer follows the same principle as the generation safeguards: if the README says the application compiles, tests, and can launch its real Swing interface, the repository should be able to check that automatically.
 
 ## Architecture and trade-offs
 
@@ -180,7 +180,7 @@ ConceptLab is a local-first Java desktop application.
 
 The durable model layer is separated into focused classes, but the application and service responsibilities remain concentrated in [`Main.java`](Main.java). `Main` currently handles Swing screen construction, navigation, generation orchestration, API communication, quiz lifecycle, persistence coordination, and several utility concerns.
 
-I do not present that as an ideal final architecture. If this were developed into a longer-term production system, the clearest next step would be to separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over performing a late refactor only to make the repository look more modular.
+I would not keep that structure forever. If I developed ConceptLab into a longer-term production system, the clearest next step would be to separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over doing a late structural refactor.
 
 That trade-off is documented in more detail in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -197,11 +197,11 @@ I owned the project end to end:
 - integrating and hardening the Groq generation pipeline;
 - debugging API, output, persistence, and interface failures;
 - testing the product with other users and changing priorities based on what was useful;
-- preparing the reproducible public portfolio presentation.
+- preparing this public repository and its reproducible UI captures.
 
 Development tools, including AI-assisted coding tools, were part of the programming workflow. The product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.
 
-> **Portfolio provenance:** This repository is a curated public portfolio version of ConceptLab. Its visible Git history primarily reflects public cleanup, verification, and presentation work rather than the project's complete development timeline.
+> **Project history:** ConceptLab predates this public repository. I created the public repository later to clean up the documentation, add verification, and make the project easier to explore, so the visible Git history is not the full development timeline.
 
 ## Technology
 
@@ -227,7 +227,7 @@ Development tools, including AI-assisted coding tools, were part of the programm
 - **[`EscapeUtil.java`](EscapeUtil.java):** escaping helpers for the custom persistence format.
 - **[`LoadingScreenFacts.java`](LoadingScreenFacts.java):** lightweight educational content displayed during background work.
 - **[`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java):** dependency-free regression and smoke checks for the core model and persistence layer.
-- **[`tools/PortfolioCapture.java`](tools/PortfolioCapture.java):** reproducible UI driver that launches and navigates the real application to produce portfolio captures.
+- **[`tools/PortfolioCapture.java`](tools/PortfolioCapture.java):** reproducible UI driver that launches and navigates the real application to produce README captures.
 
 ## Run locally
 
