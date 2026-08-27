@@ -1,5 +1,6 @@
 name: Apply final ConceptLab screenshot plan
 
+# One-time migration: use the selected full-resolution screenshots supplied for the portfolio README.
 on:
   push:
     branches:
