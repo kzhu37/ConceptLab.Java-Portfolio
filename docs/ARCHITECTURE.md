@@ -41,11 +41,13 @@ In the browser build:
 
 - CheerpJ runs the real Swing application and maps `user.home` to its persistent `/files` filesystem;
 - the bundled Newtonian Mechanics StudySet is copied into persistent storage without deleting user-created sets;
-- AI calls use a constrained same-origin server endpoint, while provider credentials remain server-side;
+- Java AI calls cross the CheerpJ boundary through a registered native function that uses browser `fetch` only for the same-origin `/api/conceptlab/ai` route;
+- the Vercel function adds the Groq credential server-side, so the browser bundle and Java artifact never receive the API key;
+- the browser transport has an explicit timeout and rejects cross-origin or unexpected endpoints before making a request;
 - each launch passes a unique token to Java, and Java writes that token only after storage setup and Swing initialization finish;
 - CheerpJ's internal Java clipboard avoids browser permission prompts during anonymous startup.
 
-The production smoke workflow verifies the deployed commit metadata and JAR hash before exercising live AI, Java startup, StudySet persistence, refresh behavior, and the scoped demo reset.
+The production smoke workflow verifies the deployed commit metadata, checks that the deployed browser bundle contains the native AI bridge, compares the production JAR hash with the current GitHub revision, and then exercises live AI, Java startup, StudySet persistence, refresh behavior, and the scoped demo reset.
 
 ## Major components
 
