@@ -6,7 +6,7 @@
   <text x="600" y="68" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" fill="#596579">Each step came from a concrete development constraint, not from adding technology for its own sake.</text>
 
   <g font-family="Arial, Helvetica, sans-serif">
-    <rect x="35" y="108" width="198" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
+    <rect x="35" y="108" width="210" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
     <circle cx="65" cy="137" r="16" fill="#142D53"/>
     <text x="65" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">1</text>
     <text x="86" y="143" font-size="16" font-weight="700" fill="#142D53">Simplify the stack</text>
@@ -16,57 +16,57 @@
     <text x="55" y="244" font-size="12" fill="#596579">Faster iteration, fewer</text>
     <text x="55" y="260" font-size="12" fill="#596579">dependency problems</text>
 
-    <path d="M244 185 H268" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
-    <path d="M262 178 L270 185 L262 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M248 185 H257" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
+    <path d="M252 178 L260 185 L252 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <rect x="279" y="108" width="198" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
-    <circle cx="309" cy="137" r="16" fill="#D69322"/>
-    <text x="309" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">2</text>
-    <text x="330" y="143" font-size="16" font-weight="700" fill="#142D53">Reduce complexity</text>
-    <text x="299" y="177" font-size="14" fill="#26303D">Feature-first growth</text>
-    <text x="299" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
-    <text x="299" y="221" font-size="14" fill="#26303D">Utility-first learning loop</text>
-    <text x="299" y="244" font-size="12" fill="#596579">Keep what improves practice</text>
-    <text x="299" y="260" font-size="12" fill="#596579">and feedback</text>
+    <rect x="265" y="108" width="210" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
+    <circle cx="295" cy="137" r="16" fill="#D69322"/>
+    <text x="295" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">2</text>
+    <text x="316" y="143" font-size="16" font-weight="700" fill="#142D53">Reduce complexity</text>
+    <text x="285" y="177" font-size="14" fill="#26303D">Feature-first growth</text>
+    <text x="285" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
+    <text x="285" y="221" font-size="14" fill="#26303D">Utility-first learning loop</text>
+    <text x="285" y="244" font-size="12" fill="#596579">Keep what improves practice</text>
+    <text x="285" y="260" font-size="12" fill="#596579">and feedback</text>
 
-    <path d="M488 185 H512" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
-    <path d="M506 178 L514 185 L506 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M478 185 H487" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
+    <path d="M482 178 L490 185 L482 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <rect x="523" y="108" width="198" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
-    <circle cx="553" cy="137" r="16" fill="#1A8C78"/>
-    <text x="553" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">3</text>
-    <text x="574" y="143" font-size="16" font-weight="700" fill="#142D53">Guard generation</text>
-    <text x="543" y="177" font-size="14" fill="#26303D">One-shot model output</text>
-    <text x="543" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
-    <text x="543" y="221" font-size="14" fill="#26303D">Validated generation pipeline</text>
-    <text x="543" y="244" font-size="12" fill="#596579">Contracts, batching, retries,</text>
-    <text x="543" y="260" font-size="12" fill="#596579">deduplication, fallbacks</text>
+    <rect x="495" y="108" width="210" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
+    <circle cx="525" cy="137" r="16" fill="#1A8C78"/>
+    <text x="525" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">3</text>
+    <text x="546" y="143" font-size="16" font-weight="700" fill="#142D53">Guard generation</text>
+    <text x="515" y="177" font-size="14" fill="#26303D">One-shot model output</text>
+    <text x="515" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
+    <text x="515" y="221" font-size="14" fill="#26303D">Validated generation pipeline</text>
+    <text x="515" y="244" font-size="12" fill="#596579">Contracts, batching, retries,</text>
+    <text x="515" y="260" font-size="12" fill="#596579">deduplication, fallbacks</text>
 
-    <path d="M732 185 H756" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
-    <path d="M750 178 L758 185 L750 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M708 185 H717" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
+    <path d="M712 178 L720 185 L712 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <rect x="767" y="108" width="198" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
-    <circle cx="797" cy="137" r="16" fill="#784AA0"/>
-    <text x="797" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">4</text>
-    <text x="818" y="143" font-size="16" font-weight="700" fill="#142D53">Protect saved data</text>
-    <text x="787" y="177" font-size="14" fill="#26303D">Simple local files</text>
-    <text x="787" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
-    <text x="787" y="221" font-size="14" fill="#26303D">Versioned StudySets</text>
-    <text x="787" y="244" font-size="12" fill="#596579">Escaping, count checks,</text>
-    <text x="787" y="260" font-size="12" fill="#596579">legacy loading</text>
+    <rect x="725" y="108" width="210" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
+    <circle cx="755" cy="137" r="16" fill="#784AA0"/>
+    <text x="755" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">4</text>
+    <text x="776" y="143" font-size="16" font-weight="700" fill="#142D53">Protect saved data</text>
+    <text x="745" y="177" font-size="14" fill="#26303D">Simple local files</text>
+    <text x="745" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
+    <text x="745" y="221" font-size="14" fill="#26303D">Versioned StudySets</text>
+    <text x="745" y="244" font-size="12" fill="#596579">Escaping, count checks,</text>
+    <text x="745" y="260" font-size="12" fill="#596579">legacy loading</text>
 
-    <path d="M976 185 H1000" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
-    <path d="M994 178 L1002 185 L994 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M938 185 H947" stroke="#7A8496" stroke-width="3" stroke-linecap="round"/>
+    <path d="M942 178 L950 185 L942 192" fill="none" stroke="#7A8496" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <rect x="1011" y="108" width="154" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
-    <circle cx="1041" cy="137" r="16" fill="#142D53"/>
-    <text x="1041" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">5</text>
-    <text x="1062" y="143" font-size="16" font-weight="700" fill="#142D53">Make it public</text>
-    <text x="1031" y="177" font-size="14" fill="#26303D">Desktop-only access</text>
-    <text x="1031" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
-    <text x="1031" y="221" font-size="14" fill="#26303D">CheerpJ adaptation</text>
-    <text x="1031" y="244" font-size="12" fill="#596579">Explicit runtime, storage,</text>
-    <text x="1031" y="260" font-size="12" fill="#596579">and AI boundaries</text>
+    <rect x="955" y="108" width="210" height="155" rx="18" fill="#FFFFFF" stroke="#D2D6DC" stroke-width="2"/>
+    <circle cx="985" cy="137" r="16" fill="#142D53"/>
+    <text x="985" y="143" text-anchor="middle" font-size="14" font-weight="700" fill="#FFFFFF">5</text>
+    <text x="1006" y="143" font-size="16" font-weight="700" fill="#142D53">Make it public</text>
+    <text x="975" y="177" font-size="14" fill="#26303D">Desktop-only access</text>
+    <text x="975" y="199" font-size="14" font-weight="700" fill="#D69322">to</text>
+    <text x="975" y="221" font-size="14" fill="#26303D">CheerpJ adaptation</text>
+    <text x="975" y="244" font-size="12" fill="#596579">Explicit runtime, storage,</text>
+    <text x="975" y="260" font-size="12" fill="#596579">and AI boundaries</text>
   </g>
 
   <text x="600" y="306" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="700" fill="#142D53">The pattern: simplify first, then add reliability where real use exposed failure modes.</text>
