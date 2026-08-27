@@ -1,0 +1,45 @@
+name: Run ConceptLab browser AI transport repair
+
+on:
+  push:
+    paths:
+      - ".github/workflows/repair-browser-ai-transport-v2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply guarded transport repair
+        run: python3 tools/repair_browser_ai_transport.py
+
+      - name: Verify API and static contracts
+        run: |
+          npm test
+          npm run verify:static
+
+      - name: Build browser artifact
+        run: |
+          python3 browser/build-browser.py --output ConceptLab-browser.jar
+          python3 browser/normalize-jar.py ConceptLab-browser.jar
+          npm run verify:static
+
+      - name: Commit repaired browser transport
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add browser.js browser/build-browser.py tests/browser-static-check.js ConceptLab-browser.jar
+          if git diff --cached --quiet; then
+            echo "No repair changes were needed."
+            exit 0
+          fi
+          git commit -m "Fix browser AI generation transport"
+          git push origin HEAD:main
