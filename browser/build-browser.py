@@ -145,6 +145,29 @@ def patch_main(source: str) -> str:
 '''
     source = replace_once(source, storage_marker, storage_replacement, "browser storage seed")
 
+    ready_marker = '''        frame.setVisible(true);
+    }
+'''
+    ready_replacement = '''        frame.setVisible(true);
+        if (BROWSER_MODE) {
+            try {
+                String launchToken = System.getProperty("conceptlab.launchToken", "").trim();
+                if (!launchToken.isEmpty()) {
+                    Files.writeString(
+                            appHome.resolve("browser-ready.txt"),
+                            launchToken,
+                            StandardCharsets.UTF_8
+                    );
+                }
+            } catch (Exception ex) {
+                System.err.println("[ConceptLab][Browser] Could not publish startup readiness: "
+                        + ex.getMessage());
+            }
+        }
+    }
+'''
+    source = replace_once(source, ready_marker, ready_replacement, "browser readiness marker")
+
     source = replace_once(
         source,
         '.uri(URI.create("https://api.groq.com/openai/v1/chat/completions"))',
@@ -399,3 +422,4 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"Browser build failed: {exc}", file=sys.stderr)
         raise
+

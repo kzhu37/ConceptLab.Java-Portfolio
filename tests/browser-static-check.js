@@ -16,11 +16,14 @@ assert.match(index, /CheerpJ Community License/);
 assert.match(browser, /version:\s*17/);
 assert.match(browser, /user\.home=\/files/);
 assert.match(browser, /conceptlab\.api\.url=/);
+assert.match(browser, /conceptlab\.launchToken=/);
+assert.match(browser, /browser-ready\.txt/);
 assert.match(api, /openai\/gpt-oss-20b/);
 assert.match(api, /openai\/gpt-oss-120b/);
 assert.match(api, /type:\s*"json_schema"/);
 assert.match(api, /strict:\s*true/);
 assert.match(build, /javac.*--release/si);
+assert.match(build, /appHome\.resolve\("browser-ready\.txt"\)/);
 
 // Reset Demo must only replace the bundled demo file. It must never sweep all
 // persisted .clab files because users may have created or imported their own sets.
@@ -41,3 +44,4 @@ if (fs.existsSync(jarPath)) {
 }
 
 console.log("Browser static checks passed.");
+

@@ -143,7 +143,12 @@ async function waitForRuntime(page) {
   }, null, { timeout: 150_000 });
   await page.waitForFunction(() => {
     const host = document.querySelector("#conceptlab-display");
-    return Boolean(host && host.children.length > 0 && host.getBoundingClientRect().height > 0);
+    return Boolean(
+      host
+      && host.dataset.javaReady === "true"
+      && host.children.length > 0
+      && host.getBoundingClientRect().height > 0
+    );
   }, null, { timeout: 30_000 });
 }
 
@@ -168,10 +173,11 @@ async function readSeededSet(page, timeoutMs = 60_000) {
 
 async function verifyBrowserRuntime() {
   const browser = await chromium.launch({ headless: true });
+  let page;
+  const consoleErrors = [];
   try {
     const context = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
-    const page = await context.newPage();
-    const consoleErrors = [];
+    page = await context.newPage();
     page.on("console", (message) => {
       if (message.type() === "error") consoleErrors.push(message.text());
     });
@@ -194,9 +200,20 @@ async function verifyBrowserRuntime() {
     assert.match(afterReset, /title=Newtonian Mechanics/);
 
     await page.screenshot({ path: "conceptlab-production.png", fullPage: true });
-    fs.writeFileSync("conceptlab-browser-console-errors.txt", consoleErrors.join("\n"));
+    const appFailures = consoleErrors.filter((message) => (
+      /ConceptLab browser launch failed|Unhandled browser runtime rejection/i.test(message)
+    ));
+    assert.deepEqual(appFailures, [], `application startup logged errors: ${appFailures.join(" | ")}`);
     console.log(`Browser runtime smoke passed; captured ${consoleErrors.length} console error message(s) for review.`);
+  } catch (error) {
+    if (page) {
+      await page.screenshot({ path: "conceptlab-production-failure.png", fullPage: true }).catch(() => {});
+      const dom = await page.content().catch(() => "");
+      fs.writeFileSync("conceptlab-browser-failure-dom.html", dom);
+    }
+    throw error;
   } finally {
+    fs.writeFileSync("conceptlab-browser-console-errors.txt", consoleErrors.join("\n"));
     await browser.close();
   }
 }
@@ -206,3 +223,4 @@ await verifyStaticSurface();
 await verifyProductionAi();
 await verifyBrowserRuntime();
 console.log("ConceptLab production browser smoke checks passed.");
+

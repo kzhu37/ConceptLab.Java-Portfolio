@@ -10,6 +10,13 @@
   const resetButton = document.getElementById("reset-demo");
   const params = new URLSearchParams(window.location.search);
   const resetRequested = params.get("reset") === "1";
+  const launchToken = typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+  const delay = (milliseconds) => new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
 
   const setStatus = (text) => {
     status.textContent = text;
@@ -32,6 +39,22 @@
 
   retryButton.addEventListener("click", () => window.location.reload());
 
+  async function waitForJavaReady(expectedToken) {
+    const deadline = Date.now() + 150_000;
+    while (Date.now() < deadline) {
+      try {
+        const marker = await cjFileBlob("/files/.conceptlab/browser-ready.txt");
+        if ((await marker.text()).trim() === expectedToken) {
+          return;
+        }
+      } catch {
+        // The Java process creates the marker after storage and Swing are ready.
+      }
+      await delay(750);
+    }
+    throw new Error("The Java application did not finish starting within 150 seconds");
+  }
+
   async function launch() {
     try {
       setStatus("Checking the Java browser artifact...");
@@ -50,6 +73,7 @@
           "conceptlab.browser=true",
           `conceptlab.api.url=${window.location.origin}/api/conceptlab/ai`,
           `conceptlab.resetDemo=${resetRequested ? "true" : "false"}`,
+          `conceptlab.launchToken=${launchToken}`,
         ],
         preloadProgress: (done, total) => {
           if (total > 0) {
@@ -73,23 +97,26 @@
       cheerpjCreateDisplay(-1, -1, display);
 
       const run = cheerpjRunJar("/app/ConceptLab-browser.jar");
-      run.then((exitCode) => {
-        if (exitCode !== 0) {
-          failLaunch(new Error(`Java application exited with code ${exitCode}`));
-        }
-      }).catch(failLaunch);
+      await Promise.race([
+        waitForJavaReady(launchToken),
+        run.then((exitCode) => {
+          throw new Error(`Java application exited with code ${exitCode}`);
+        }),
+      ]);
 
-      // Give the Swing frame time to paint before removing the outer loading layer.
-      window.setTimeout(() => {
-        progress.style.width = "100%";
-        overlay.classList.add("done");
-        status.textContent = "ConceptLab Java is running";
-        if (resetRequested) {
-          const clean = new URL(window.location.href);
-          clean.searchParams.delete("reset");
-          window.history.replaceState({}, "", clean.toString());
-        }
-      }, 3200);
+      progress.style.width = "100%";
+      overlay.classList.add("done");
+      display.dataset.javaReady = "true";
+      status.textContent = "ConceptLab Java is running";
+      if (resetRequested) {
+        const clean = new URL(window.location.href);
+        clean.searchParams.delete("reset");
+        window.history.replaceState({}, "", clean.toString());
+      }
+
+      run.then((exitCode) => {
+        failLaunch(new Error(`Java application exited with code ${exitCode}`));
+      }).catch(failLaunch);
     } catch (error) {
       failLaunch(error);
     }
@@ -101,3 +128,4 @@
 
   launch();
 })();
+

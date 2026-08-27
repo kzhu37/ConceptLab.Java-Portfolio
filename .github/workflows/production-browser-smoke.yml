@@ -43,5 +43,8 @@ jobs:
           name: conceptlab-production-browser-evidence
           path: |
             conceptlab-production.png
+            conceptlab-production-failure.png
             conceptlab-browser-console-errors.txt
+            conceptlab-browser-failure-dom.html
           if-no-files-found: ignore
+
