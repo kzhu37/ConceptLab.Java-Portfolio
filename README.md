@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <strong>Independently designed and developed</strong> · used or tested by <strong>60+ people</strong> during development
+  Used or tested by <strong>60+ people</strong> during development
 </p>
 
 <p align="center">
@@ -34,12 +34,12 @@
       <img src="docs/media/conceptlab-dashboard.png" alt="ConceptLab dashboard showing a Newtonian Mechanics StudySet">
     </td>
     <td width="50%">
-      <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab browser edition showing an application-focused Newtonian Mechanics question and a submitted response in progress">
+      <img src="docs/media/browser-production.png" alt="ConceptLab browser edition running the real Java Swing application through CheerpJ">
     </td>
   </tr>
   <tr>
     <td align="center"><sub>A loaded StudySet brings flashcards, practice, unit testing, resources, and saved progress into one local workflow.</sub></td>
-    <td align="center"><sub>The live browser edition runs the real Swing application and asks users to apply concepts, not only recall them.</sub></td>
+    <td align="center"><sub>The browser edition runs the real Swing application through CheerpJ, with persistent StudySets and a server-side AI boundary.</sub></td>
   </tr>
 </table>
 
@@ -157,10 +157,10 @@ answer
 The point is not simply to mark an answer right or wrong. The error should lead somewhere useful.
 
 <p align="center">
-  <img src="docs/media/browser-feedback-review.webp" alt="ConceptLab feedback flow linking an incorrect mechanics response to a relevant PhET simulation and related flashcards" width="650">
+  <img src="docs/media/answer-feedback.png" alt="ConceptLab unit-test feedback after an incorrect Newtonian mechanics response" width="650">
 </p>
 <p align="center">
-  <sub>After an incorrect response, the live application connects the correction to a relevant simulation and related flashcards so the mistake becomes the next review step.</sub>
+  <sub>A submitted response produces immediate correctness feedback and an explanation, turning a mistake into the next review step.</sub>
 </p>
 
 ## Development decisions and iteration
@@ -207,7 +207,7 @@ The browser API tests cover accepted ConceptLab task shapes, model whitelisting,
 
 The desktop self-tests cover escaping round-trips, question invariants, resource URL validation, StudySet save/load round-trips, duplicate protection across practice and unit-test banks, declared-count corruption, legacy question loading, and malformed persisted records.
 
-The desktop product captures in this README are generated through [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java). CI verifies that the real application can still produce fresh captures, but it does not automatically commit binary screenshot changes back to the repository. The browser quiz and feedback images above are captures from the public production deployment; the separate Playwright smoke workflow also records production browser screenshots as CI artifacts.
+The desktop product captures in this README are generated through [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java). CI verifies that the real application can still produce fresh captures, but it does not automatically commit binary screenshot changes back to the repository. The browser image above is captured from the public production deployment; the separate Playwright smoke workflow also records production browser screenshots as CI artifacts.
 
 These checks exist for the same reason as the generation safeguards: **a technical claim is stronger when the repository can reproduce the behavior behind it.**
 
