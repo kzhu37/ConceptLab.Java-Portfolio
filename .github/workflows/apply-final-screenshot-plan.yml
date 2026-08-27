@@ -2,9 +2,10 @@ name: Apply final ConceptLab screenshot plan
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - '.github/workflows/apply-final-screenshot-plan.yml'
+      - .github/workflows/apply-final-screenshot-plan.yml
 
 permissions:
   contents: write
@@ -13,219 +14,30 @@ jobs:
   apply-screenshots:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Fetch full-resolution selected screenshots
-        shell: bash
+      - name: Fetch selected full-resolution screenshots
+        run: bash .github/scripts/fetch_final_screenshots.sh
+
+      - name: Apply README screenshot plan
+        run: python3 .github/scripts/apply_final_screenshot_plan.py
+
+      - name: Remove superseded assets and one-time helpers
         run: |
-          set -euo pipefail
-          mkdir -p docs/media
-
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2Ffa8a6a53-1723-451d-bb85-1c22f746b02f/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAGhwSxfCGwzH01FpPUXXis74CJjKNkcsH5pCoVdRa5JP&exp=1787821715&osig=AAAAAAAAAAAAAAAAAAAAABFTbB4VTy4TndL0IMQHinYB4Df4IlL4XqPRCCOOL-ny&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/app-dashboard.png
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2Ff4570d1e-5bab-470c-b52f-1ee7845ec56f/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAOYcCtGaKvMP2Cn8F9zGiuWTqrBn_bR6dYQUIEmigawV&exp=1787822511&osig=AAAAAAAAAAAAAAAAAAAAAEzn2yqmeEdeN1JYlMGW7SlNmeLbgNHkov3JMBirYC9F&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/app-create-study-set.png
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2F040c211c-fd1d-4bb7-bf10-84bc402c1195/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAFzmrMT6unfjy_a37q0WWf1JQCDpUxf7zZ_h9j3M4CAX&exp=1787821241&osig=AAAAAAAAAAAAAAAAAAAAAGXxbhTyiihq5y7JPQ4VIuB4W8GsYyGp-Tps74L78JBY&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/app-practice-settings.png
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2F4160b72b-fde5-47aa-a0f3-b6c3cfefa140/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAALP0U_Rkckt_Bvp18sXxeuh1VgsrdmP3kmxUuusyaTaE&exp=1787824198&osig=AAAAAAAAAAAAAAAAAAAAAHvib9b1ufDyxTdEcs80uxOrvTSjWmEDzAIgLkcagl7f&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/app-feedback-question.png
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2F3fbd8c28-574c-4691-862f-9d48adf37c00/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAJntuowuSTO7s90AD1_6Slr1vMHdpOk6Z5ZFfmpm1IRp&exp=1787821494&osig=AAAAAAAAAAAAAAAAAAAAAPcUqQIDpU88KM82H7e22MtRapDDBkD2rntmn7tj1jId&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/app-feedback-review.png
-          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:960/quality:100/uri:ifs%3A%2F%2FM%2F5cc762eb-1e38-4765-a9bf-126b01063439/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAIS64uDhTCrd68jHSxhvk_yqY0qbaDr1ErRbJdF19Y-b&exp=1787821327&osig=AAAAAAAAAAAAAAAAAAAAAHuU1CcEezbFgCDyi0UxcKGc7EdB5h1DBFWSKuewD1-o&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/browser-live-quiz.png
-
-      - name: Verify screenshot integrity and resolution
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import struct
-
-          expected = {
-              'docs/media/app-dashboard.png': (1920, 1040),
-              'docs/media/app-create-study-set.png': (1920, 1040),
-              'docs/media/app-practice-settings.png': (1920, 1040),
-              'docs/media/app-feedback-question.png': (1920, 1040),
-              'docs/media/app-feedback-review.png': (1920, 1040),
-              'docs/media/browser-live-quiz.png': (1920, 960),
-          }
-          for filename, dimensions in expected.items():
-              path = Path(filename)
-              data = path.read_bytes()
-              if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
-                  raise SystemExit(f'{filename} is not a valid PNG')
-              width, height = struct.unpack('>II', data[16:24])
-              print(f'{filename}: {width}x{height}, {len(data)} bytes')
-              if (width, height) != dimensions:
-                  raise SystemExit(f'{filename} has unexpected dimensions {(width, height)}')
-              if len(data) < 50_000:
-                  raise SystemExit(f'{filename} is unexpectedly small')
-          PY
-
-      - name: Rebuild README visual hierarchy
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('README.md')
-          text = path.read_text()
-
-          old_hero = '''<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/media/conceptlab-dashboard.png" alt="ConceptLab dashboard showing a Newtonian Mechanics StudySet">
-    </td>
-    <td width="50%">
-      <img src="docs/media/browser-production.png" alt="ConceptLab browser edition running the real Java Swing application through CheerpJ">
-    </td>
-  </tr>
-  <tr>
-    <td align="center"><sub>A loaded StudySet brings flashcards, practice, unit testing, resources, and saved progress into one local workflow.</sub></td>
-    <td align="center"><sub>The browser edition runs the real Swing application through CheerpJ, with persistent StudySets and a server-side AI boundary.</sub></td>
-  </tr>
-</table>'''
-          new_hero = '''<p align="center">
-  <img src="docs/media/app-dashboard.png" alt="ConceptLab dashboard showing a generated Newton's Laws StudySet" width="100%">
-</p>
-<p align="center">
-  <sub>A generated StudySet brings flashcards, fresh practice, unit testing, related resources, and saved progress into one desktop workflow.</sub>
-</p>'''
-          if old_hero not in text:
-              raise SystemExit('Current hero block not found')
-          text = text.replace(old_hero, new_hero, 1)
-
-          glance_marker = '''| **Verification** | Tests desktop and browser builds, persistence, AI contracts, security boundaries, reproducible UI capture, and the live deployment. |
-
-## Engineering highlights'''
-          glance_insert = '''| **Verification** | Tests desktop and browser builds, persistence, AI contracts, security boundaries, reproducible UI capture, and the live deployment. |
-
-<p align="center">
-  <img src="docs/media/app-feedback-question.png" alt="ConceptLab open-response unit-test question showing an incorrect answer and targeted misconception feedback" width="100%">
-</p>
-<p align="center">
-  <sub>An open-response mistake is evaluated for specific misconceptions instead of receiving only a score.</sub>
-</p>
-
-## Engineering highlights'''
-          if glance_marker not in text:
-              raise SystemExit('At-a-glance insertion point not found')
-          text = text.replace(glance_marker, glance_insert, 1)
-
-          browser_marker = '''**Live browser:** [conceptlab-browser.vercel.app](https://conceptlab-browser.vercel.app)
-
-## Product workflow'''
-          browser_insert = '''**Live browser:** [conceptlab-browser.vercel.app](https://conceptlab-browser.vercel.app)
-
-<p align="center">
-  <img src="docs/media/browser-live-quiz.png" alt="ConceptLab production browser edition running the real Swing application through CheerpJ with a loaded Newtonian Mechanics quiz" width="100%">
-</p>
-<p align="center">
-  <sub>The public browser edition runs the real Swing application through CheerpJ while keeping StudySets persistent and AI credentials server-side.</sub>
-</p>
-
-## Product workflow'''
-          if browser_marker not in text:
-              raise SystemExit('Browser insertion point not found')
-          text = text.replace(browser_marker, browser_insert, 1)
-
-          old_product = '''<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/media/create-study-set.png" alt="ConceptLab StudySet creation form populated with mechanics notes and learning goals">
-    </td>
-    <td width="50%">
-      <img src="docs/media/practice-settings.png" alt="ConceptLab fresh-practice settings showing difficulty, response mix, challenge, seen-question, and uniqueness controls">
-    </td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Source material, goals, and instructions define what the StudySet should teach.</sub></td>
-    <td align="center"><sub>Practice can be tuned without reducing the learning loop to one fixed question bank.</sub></td>
-  </tr>
-</table>
-
-The system can build flashcards, a broader unit-test bank, and related learning resources. Fresh practice is generated on demand so the user is not limited to one fixed question set.
-
-### Practice is configurable, not fixed
-
-Users can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.'''
-          new_product = '''<p align="center">
-  <img src="docs/media/app-create-study-set.png" alt="ConceptLab StudySet creation form populated with Newton's Laws source material, goals, and custom instructions" width="100%">
-</p>
-<p align="center">
-  <sub>Source material, explicit learning goals, and custom instructions define what the StudySet should teach before generation begins.</sub>
-</p>
-
-The system can build flashcards, a broader unit-test bank, and related learning resources. Fresh practice is generated on demand so the user is not limited to one fixed question set.
-
-### Practice is configurable, not fixed
-
-<p align="center">
-  <img src="docs/media/app-practice-settings.png" alt="ConceptLab fresh-practice settings showing question count, difficulty, response mix, challenge, seen-question, and uniqueness controls" width="100%">
-</p>
-<p align="center">
-  <sub>Fresh practice can be tuned by question count, difficulty, response style, challenge level, seen-question avoidance, and answer uniqueness.</sub>
-</p>
-
-Users can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.'''
-          if old_product not in text:
-              raise SystemExit('Current product screenshot block not found')
-          text = text.replace(old_product, new_product, 1)
-
-          old_feedback = '''<p align="center">
-  <img src="docs/media/answer-feedback.png" alt="ConceptLab unit-test feedback after an incorrect Newtonian mechanics response" width="650">
-</p>
-<p align="center">
-  <sub>A submitted response produces immediate correctness feedback and an explanation, turning a mistake into the next review step.</sub>
-</p>'''
-          new_feedback = '''<p align="center">
-  <img src="docs/media/app-feedback-review.png" alt="ConceptLab feedback flow connecting a Newtonian mechanics misconception to related resources and flashcards" width="100%">
-</p>
-<p align="center">
-  <sub>After explaining the misconception, ConceptLab links the same mistake to targeted resources and related flashcards so feedback becomes the next review step.</sub>
-</p>'''
-          if old_feedback not in text:
-              raise SystemExit('Current feedback screenshot block not found')
-          text = text.replace(old_feedback, new_feedback, 1)
-
-          old_testing = '''The desktop product captures in this README are generated through [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java). CI verifies that the real application can still produce fresh captures, but it does not automatically commit binary screenshot changes back to the repository. The browser image above is captured from the public production deployment; the separate Playwright smoke workflow also records production browser screenshots as CI artifacts.'''
-          new_testing = '''The product screenshots in this README are full-resolution captures from the actual desktop application, with one targeted screenshot from the public production browser edition. CI independently launches and drives the real desktop application through [`tools/PortfolioCapture.java`](tools/PortfolioCapture.java) and uploads reproducible verification captures as workflow artifacts. The Playwright production smoke workflow separately records browser evidence. The selected README images optimize clarity and presentation; the automated captures provide independent verification that the underlying behavior remains reproducible.'''
-          if old_testing not in text:
-              raise SystemExit('Current screenshot provenance paragraph not found')
-          text = text.replace(old_testing, new_testing, 1)
-
-          path.write_text(text)
-
-          capture = Path('tools/PortfolioCapture.java')
-          capture_text = capture.read_text()
-          capture_text = capture_text.replace(
-              ' * Generates reproducible screenshots for the public portfolio README.',
-              ' * Generates reproducible verification screenshots for CI and portfolio regression checks.',
-              1,
-          )
-          capture_text = capture_text.replace(
-              ' * captures the exact screens used in the README. It does not require API keys;',
-              ' * captures representative product screens for verification. It does not require API keys;',
-              1,
-          )
-          capture.write_text(capture_text)
-          PY
-
-      - name: Remove superseded screenshot assets and temporary workflow
-        shell: bash
-        run: |
-          set -euo pipefail
-          rm -f \
-            docs/media/conceptlab-dashboard.png \
-            docs/media/create-study-set.png \
-            docs/media/practice-settings.png \
-            docs/media/answer-feedback.png \
-            docs/media/browser-production.png
+          rm -f docs/media/conceptlab-dashboard.png
+          rm -f docs/media/create-study-set.png
+          rm -f docs/media/practice-settings.png
+          rm -f docs/media/answer-feedback.png
+          rm -f docs/media/browser-production.png
+          rm -f .github/scripts/fetch_final_screenshots.sh
+          rm -f .github/scripts/apply_final_screenshot_plan.py
           rm -f .github/workflows/apply-final-screenshot-plan.yml
 
       - name: Audit final visual references
-        shell: bash
         run: |
           set -euo pipefail
           grep -q 'docs/media/app-dashboard.png' README.md
@@ -234,11 +46,12 @@ Users can change question count, difficulty, response style, challenge level, wh
           grep -q 'docs/media/app-create-study-set.png' README.md
           grep -q 'docs/media/app-practice-settings.png' README.md
           grep -q 'docs/media/app-feedback-review.png' README.md
-          ! grep -Eq 'conceptlab-dashboard\.png|create-study-set\.png|practice-settings\.png|answer-feedback\.png|browser-production\.png' README.md
-          ! grep -RIl $'\xE2\x80\x94\|\xE2\x80\x93' README.md docs/*.md >/dev/null
+          if grep -Eq 'conceptlab-dashboard\.png|create-study-set\.png|practice-settings\.png|answer-feedback\.png|browser-production\.png' README.md; then
+            echo 'README still references superseded screenshots.' >&2
+            exit 1
+          fi
 
       - name: Commit final screenshot presentation
-        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
