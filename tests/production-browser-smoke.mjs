@@ -75,6 +75,8 @@ async function verifyStaticSurface() {
   const browserText = await browserJs.text();
   assert.match(browserText, /cheerpjInit/);
   assert.match(browserText, /conceptlab\.api\.url/);
+  assert.match(browserText, /Java_Main_browserApiFetch/);
+  assert.match(browserText, /endpoint\.origin !== window\.location\.origin/);
   assertNoCredentialMarker(Buffer.from(browserText), "browser.js");
 
   const demo = await fetchWithRetry("/demo/newtonian-mechanics.clab");
