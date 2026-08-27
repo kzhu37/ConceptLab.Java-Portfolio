@@ -29,12 +29,12 @@
       <img src="docs/media/conceptlab-dashboard.png" alt="ConceptLab dashboard showing a Newtonian Mechanics StudySet">
     </td>
     <td width="50%">
-      <img src="docs/media/answer-feedback.png" alt="ConceptLab feedback after an incorrect mechanics response, with explanation and related review material">
+      <img src="docs/media/browser-feedback-review.webp" alt="ConceptLab feedback after an incorrect mechanics response, with correction, PhET review material, and related flashcards">
     </td>
   </tr>
   <tr>
     <td align="center"><sub><strong>StudySet:</strong> flashcards, practice, unit testing, resources, and saved progress in one workflow.</sub></td>
-    <td align="center"><sub><strong>Feedback loop:</strong> a mistake becomes an explanation and a path back to relevant learning material.</sub></td>
+    <td align="center"><sub><strong>Feedback loop:</strong> an incorrect response becomes a correction, a relevant simulation, and related flashcards to review next.</sub></td>
   </tr>
 </table>
 
@@ -166,23 +166,23 @@ The important result was not the number by itself. Testing changed what I built:
 | A wrong answer alone did not tell the learner what to do next | Connect feedback to explanation, related resources, and related flashcards |
 | More controls and features could make the product harder to use | Shift toward a simpler, utility-first workflow and remove complexity that did not improve studying |
 
-I did not collect production telemetry for monthly active users, retention, session totals, grade improvement, or controlled learning outcomes, so I do not present the 60+ figure as one of those metrics. The fuller testing record and claim boundaries are in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
+I tracked testing and iteration, not production analytics, so this repository does not claim monthly active users, retention, session totals, grade improvement, or controlled learning outcomes. The fuller testing record and claim boundaries are in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
 
 ## Browser edition
 
-ConceptLab began as a Java/Swing desktop application. The public demo was added later so the project could be opened immediately without requiring a local Java installation or asking visitors to enter an API key.
+ConceptLab began as a Java/Swing desktop application. I added the public browser edition later so the project could be opened immediately without a local Java installation or a visitor-provided API key.
 
-The desktop Java sources remain authoritative. [`browser/build-browser.py`](browser/build-browser.py) applies a small set of exact-match browser adaptations, compiles a Java 17 artifact, and packages it for **CheerpJ Core 4.3**. The browser version adds three explicit boundaries:
+The desktop Java sources remain authoritative. [`browser/build-browser.py`](browser/build-browser.py) applies a small exact-match patch set, compiles a Java 17 artifact, and packages it for **CheerpJ Core 4.3**. The browser version adds three explicit boundaries:
 
 1. **Runtime:** CheerpJ executes the Java/Swing application in the browser.
 2. **Persistence:** StudySets use CheerpJ's persistent `/files` filesystem, with a resettable Newtonian Mechanics demo seeded for first-time use.
 3. **AI security:** browser generation goes through [`api/conceptlab/ai.js`](api/conceptlab/ai.js), which keeps Groq credentials server-side and accepts only ConceptLab's constrained request contracts.
 
 <p align="center">
-  <img src="docs/media/browser-production.png" alt="ConceptLab browser edition running the Java Swing application through CheerpJ" width="86%">
+  <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab browser edition running the Java Swing application with an application-focused Newtonian Mechanics quiz" width="86%">
 </p>
 <p align="center">
-  <sub>The public demo runs the Java/Swing application through CheerpJ with persistent StudySets and a server-side AI boundary.</sub>
+  <sub>The public edition runs the Java/Swing application through CheerpJ while preserving persistent StudySets and a server-side AI boundary.</sub>
 </p>
 
 > **Browser demo note:** This is a public adaptation of the desktop application, not a separate web rewrite. Browser-specific transport and storage behavior are added only at explicit boundaries.
@@ -193,7 +193,7 @@ The desktop Java sources remain authoritative. [`browser/build-browser.py`](brow
 
 ## Verification
 
-A successful compile is not enough evidence for the claims this project makes. The repository checks the desktop core, generation policy, browser boundary, and deployed demo separately.
+A successful compile is not enough evidence for the claims this project makes. The repository verifies the desktop core, generation policy, browser boundary, and deployed demo separately.
 
 | Layer | What is verified |
 | --- | --- |
