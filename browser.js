@@ -18,6 +18,55 @@
     window.setTimeout(resolve, milliseconds);
   });
 
+  const AI_BRIDGE_PATH = "/api/conceptlab/ai";
+  const AI_BRIDGE_TIMEOUT_MS = 45_000;
+
+  async function Java_Main_browserApiFetch(_lib, rawUrl, rawBody) {
+    let endpoint;
+    try {
+      endpoint = new URL(String(rawUrl), window.location.origin);
+    } catch {
+      return JSON.stringify({ status: 0, retryAfter: "", body: "", transportError: "invalid_endpoint" });
+    }
+
+    if (
+      endpoint.origin !== window.location.origin
+      || endpoint.pathname !== AI_BRIDGE_PATH
+      || endpoint.search
+      || endpoint.hash
+    ) {
+      return JSON.stringify({ status: 0, retryAfter: "", body: "", transportError: "invalid_endpoint" });
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), AI_BRIDGE_TIMEOUT_MS);
+    try {
+      const response = await fetch(endpoint.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-ConceptLab-Client": "browser-v1",
+        },
+        body: String(rawBody),
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      const body = await response.text();
+      return JSON.stringify({
+        status: response.status,
+        retryAfter: response.headers.get("retry-after") || "",
+        body,
+        transportError: "",
+      });
+    } catch (error) {
+      const transportError = error && error.name === "AbortError" ? "timeout" : "network";
+      return JSON.stringify({ status: 0, retryAfter: "", body: "", transportError });
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
   const setStatus = (text) => {
     status.textContent = text;
     detail.textContent = text;
@@ -68,6 +117,9 @@
         version: 17,
         status: "none",
         clipboardMode: "java",
+        natives: {
+          Java_Main_browserApiFetch,
+        },
         javaProperties: [
           "user.home=/files",
           "conceptlab.browser=true",

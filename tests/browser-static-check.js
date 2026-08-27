@@ -19,6 +19,11 @@ assert.match(browser, /user\.home=\/files/);
 assert.match(browser, /conceptlab\.api\.url=/);
 assert.match(browser, /conceptlab\.launchToken=/);
 assert.match(browser, /browser-ready\.txt/);
+assert.match(browser, /Java_Main_browserApiFetch/);
+assert.match(browser, /natives:\s*\{/);
+assert.match(browser, /X-ConceptLab-Client/);
+assert.match(browser, /endpoint\.origin !== window\.location\.origin/);
+assert.match(browser, /endpoint\.pathname !== AI_BRIDGE_PATH/);
 assert.match(api, /openai\/gpt-oss-20b/);
 assert.match(api, /openai\/gpt-oss-120b/);
 assert.match(api, /type:\s*"json_schema"/);
@@ -27,6 +32,9 @@ assert.match(build, /javac.*--release/si);
 assert.match(build, /Manifest-Version: 1\.0/);
 assert.doesNotMatch(build, /--main-class/);
 assert.match(build, /appHome\.resolve\("browser-ready\.txt"\)/);
+assert.match(build, /native String browserApiFetch/);
+assert.match(build, /browserApiFetch\(GROQ_API_URL, reqBody\)/);
+assert.match(build, /skip Java HttpClient initialization in browser/);
 
 // Reset Demo must only replace the bundled demo file. It must never sweep all
 // persisted .clab files because users may have created or imported their own sets.

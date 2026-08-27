@@ -70,6 +70,9 @@ def patch_main(source: str) -> str:
     private static final int GROQ_SOURCE_CHUNK_CHARS = 6000;
     private static final int GROQ_FORBIDDEN_ITEMS_PER_BATCH = 30;
 
+    // Browser-only network transport implemented by browser.js through CheerpJ natives.
+    private static native String browserApiFetch(String url, String requestBody);
+
     // Core color palette.'''
     source = replace_once(source, api_block, api_replacement, "API boundary", regex=True)
 
@@ -180,6 +183,165 @@ def patch_main(source: str) -> str:
         '.header("Authorization", "Bearer " + apiKey)\n                        .timeout',
         '.header("Authorization", "Bearer " + apiKey)\n                        .header("X-ConceptLab-Client", BROWSER_MODE ? "browser-v1" : "desktop-v1")\n                        .timeout',
         "browser request marker",
+    )
+
+    source = replace_once(
+        source,
+        '''        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(30))
+                .build();
+''',
+        '''        HttpClient client = BROWSER_MODE
+                ? null
+                : HttpClient.newBuilder()
+                        .connectTimeout(Duration.ofSeconds(30))
+                        .build();
+''',
+        "skip Java HttpClient initialization in browser",
+    )
+
+    browser_transport_marker = '''                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(GROQ_API_URL))
+                        .header("Content-Type", "application/json")
+                        .header("Authorization", "Bearer " + apiKey)
+                        .header("X-ConceptLab-Client", BROWSER_MODE ? "browser-v1" : "desktop-v1")
+                        .timeout(Duration.ofSeconds(120))
+                        .POST(HttpRequest.BodyPublishers.ofString(reqBody, StandardCharsets.UTF_8))
+                        .build();
+
+                System.err.println("[ConceptLab][API] " + phase
+                        + " model=" + model
+                        + " attempt " + (attempt + 1) + "/" + maxAttempts
+                        + " maxOutputTokens=" + requestMaxTokens);
+                long t0 = System.currentTimeMillis();
+                HttpResponse<String> resp = client.send(
+                        request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                long elapsed = System.currentTimeMillis() - t0;
+                System.err.println("[ConceptLab][API] HTTP " + resp.statusCode() + " in " + elapsed + "ms");
+'''
+    browser_transport_replacement = '''                System.err.println("[ConceptLab][API] " + phase
+                        + " model=" + model
+                        + " attempt " + (attempt + 1) + "/" + maxAttempts
+                        + " maxOutputTokens=" + requestMaxTokens);
+                long t0 = System.currentTimeMillis();
+                int responseStatus;
+                String responseBody;
+                String responseRetryAfter = "";
+
+                if (BROWSER_MODE) {
+                    String transportEnvelope = browserApiFetch(GROQ_API_URL, reqBody);
+                    if (transportEnvelope == null || transportEnvelope.isBlank()) {
+                        throw new IOException("Browser AI transport returned no metadata");
+                    }
+
+                    Object parsedTransport;
+                    try {
+                        parsedTransport = new JsonParser(transportEnvelope).parse();
+                    } catch (RuntimeException parseEx) {
+                        throw new IOException("Browser AI transport returned invalid metadata", parseEx);
+                    }
+                    if (!(parsedTransport instanceof Map)) {
+                        throw new IOException("Browser AI transport returned invalid metadata");
+                    }
+
+                    Map<String, Object> transport = (Map<String, Object>) parsedTransport;
+                    Object statusValue = transport.get("status");
+                    if (!(statusValue instanceof Number)) {
+                        throw new IOException("Browser AI transport returned invalid status metadata");
+                    }
+                    responseStatus = ((Number) statusValue).intValue();
+                    responseBody = jsonStr(transport, "body", "");
+                    responseRetryAfter = jsonStr(transport, "retryAfter", "");
+
+                    if (responseStatus == 0) {
+                        String transportError = jsonStr(transport, "transportError", "network");
+                        if ("timeout".equalsIgnoreCase(transportError)) {
+                            throw new ApiCallException(
+                                    "Browser AI request timed out", false, 408, 1000L, null);
+                        }
+                        if ("invalid_endpoint".equalsIgnoreCase(transportError)) {
+                            throw new ApiCallException(
+                                    "Browser AI endpoint was rejected", false, 400, null);
+                        }
+                        throw new IOException("Browser AI network request failed");
+                    }
+                } else {
+                    HttpRequest request = HttpRequest.newBuilder()
+                            .uri(URI.create(GROQ_API_URL))
+                            .header("Content-Type", "application/json")
+                            .header("Authorization", "Bearer " + apiKey)
+                            .header("X-ConceptLab-Client", "desktop-v1")
+                            .timeout(Duration.ofSeconds(120))
+                            .POST(HttpRequest.BodyPublishers.ofString(reqBody, StandardCharsets.UTF_8))
+                            .build();
+                    HttpResponse<String> resp = client.send(
+                            request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+                    responseStatus = resp.statusCode();
+                    responseBody = resp.body();
+                    responseRetryAfter = resp.headers().firstValue("retry-after").orElse("");
+                }
+
+                long elapsed = System.currentTimeMillis() - t0;
+                System.err.println("[ConceptLab][API] HTTP " + responseStatus + " in " + elapsed + "ms");
+'''
+    source = replace_once(
+        source,
+        browser_transport_marker,
+        browser_transport_replacement,
+        "browser native API transport",
+    )
+    source = replace_once(
+        source,
+        "                if (resp.statusCode() == 200) {\n",
+        "                if (responseStatus == 200) {\n",
+        "browser response status",
+    )
+    source = replace_once(
+        source,
+        "new JsonParser(resp.body()).parse()",
+        "new JsonParser(responseBody).parse()",
+        "browser response body parser",
+    )
+    source = replace_once(
+        source,
+        '''                String bodySnippet = resp.body() == null
+                        ? ""
+                        : resp.body().substring(0, Math.min(500, resp.body().length()));
+''',
+        '''                String bodySnippet = responseBody == null
+                        ? ""
+                        : responseBody.substring(0, Math.min(500, responseBody.length()));
+''',
+        "browser error body",
+    )
+    source = replace_once(
+        source,
+        '''                boolean tokenRelated = isTokenRelatedFailure(resp.statusCode(), bodySnippet);
+                long retryDelayMillis = groqRetryDelayMillis(resp, attempt);
+                lastEx = new ApiCallException(
+                        "API error: HTTP " + resp.statusCode(),
+                        tokenRelated,
+                        resp.statusCode(),
+                        retryDelayMillis,
+                        null
+                );
+                if (resp.statusCode() == 413 && requestMaxTokens > GROQ_MIN_OUTPUT_TOKENS) {
+''',
+        '''                boolean tokenRelated = isTokenRelatedFailure(responseStatus, bodySnippet);
+                long parsedRetryDelayMillis = parseGroqDurationMillis(responseRetryAfter);
+                long retryDelayMillis = parsedRetryDelayMillis > 0L
+                        ? Math.min(60_000L, parsedRetryDelayMillis + 250L)
+                        : 1000L * (attempt + 1);
+                lastEx = new ApiCallException(
+                        "API error: HTTP " + responseStatus,
+                        tokenRelated,
+                        responseStatus,
+                        retryDelayMillis,
+                        null
+                );
+                if (responseStatus == 413 && requestMaxTokens > GROQ_MIN_OUTPUT_TOKENS) {
+''',
+        "browser error metadata",
     )
 
     call_marker = '''    private String callGroqChat(String systemMessage, String userMessage, double temperature) throws Exception {
@@ -295,8 +457,18 @@ def patch_main(source: str) -> str:
 
     /** Maps technical failures to user-safe categories without exposing provider details. */
     private static String friendlyFailureCategory(Throwable cause) {
-        String raw = cause == null || cause.getMessage() == null
-                ? "" : cause.getMessage().toLowerCase(Locale.ROOT);
+        StringBuilder detail = new StringBuilder();
+        Throwable cursor = cause;
+        for (int depth = 0; cursor != null && depth < 6; depth++) {
+            if (cursor.getMessage() != null && !cursor.getMessage().isBlank()) {
+                if (detail.length() > 0) {
+                    detail.append(' ');
+                }
+                detail.append(cursor.getMessage());
+            }
+            cursor = cursor.getCause();
+        }
+        String raw = detail.toString().toLowerCase(Locale.ROOT);
         if (raw.contains("429") || raw.contains("rate")) {
             return "The AI service is busy right now.";
         }
