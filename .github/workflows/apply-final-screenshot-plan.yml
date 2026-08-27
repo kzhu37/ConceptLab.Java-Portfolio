@@ -1,6 +1,6 @@
 name: Apply final ConceptLab screenshot plan
 
-# One-time migration: use the selected full-resolution screenshots supplied for the portfolio README.
+# One-time migration for the selected full-resolution screenshots supplied for the README.
 on:
   push:
     branches:
@@ -21,24 +21,54 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch selected full-resolution screenshots
-        run: bash .github/scripts/fetch_final_screenshots.sh
+      - name: Reconstruct selected full-resolution screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .github/screenshots-payload/part-* | base64 --decode > /tmp/conceptlab-screenshots.zip
+          echo '4cac3b8329d49e98be382bff219c4fb9c6307a6bad2a419ad675d61f4606773b  /tmp/conceptlab-screenshots.zip' | sha256sum -c -
+          unzip -o /tmp/conceptlab-screenshots.zip -d docs/media
+          python3 - <<'PY'
+          from pathlib import Path
+          import struct
+
+          expected = {
+              'docs/media/app-dashboard.png': (1920, 1040),
+              'docs/media/app-create-study-set.png': (1920, 1040),
+              'docs/media/app-practice-settings.png': (1920, 1040),
+              'docs/media/app-feedback-question.png': (1920, 1040),
+              'docs/media/app-feedback-review.png': (1920, 1040),
+              'docs/media/browser-live-quiz.png': (1920, 960),
+          }
+          for filename, dimensions in expected.items():
+              data = Path(filename).read_bytes()
+              if len(data) < 24 or data[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'{filename} is not a valid PNG')
+              width, height = struct.unpack('>II', data[16:24])
+              print(f'{filename}: {width}x{height}, {len(data)} bytes')
+              if (width, height) != dimensions:
+                  raise SystemExit(f'{filename}: expected {dimensions}, got {(width, height)}')
+          PY
 
       - name: Apply README screenshot plan
         run: python3 .github/scripts/apply_final_screenshot_plan.py
 
       - name: Remove superseded assets and one-time helpers
+        shell: bash
         run: |
+          set -euo pipefail
           rm -f docs/media/conceptlab-dashboard.png
           rm -f docs/media/create-study-set.png
           rm -f docs/media/practice-settings.png
           rm -f docs/media/answer-feedback.png
           rm -f docs/media/browser-production.png
+          rm -rf .github/screenshots-payload
           rm -f .github/scripts/fetch_final_screenshots.sh
           rm -f .github/scripts/apply_final_screenshot_plan.py
           rm -f .github/workflows/apply-final-screenshot-plan.yml
 
-      - name: Audit final visual references
+      - name: Audit final visual references and writing
+        shell: bash
         run: |
           set -euo pipefail
           grep -q 'docs/media/app-dashboard.png' README.md
@@ -51,12 +81,24 @@ jobs:
             echo 'README still references superseded screenshots.' >&2
             exit 1
           fi
+          python3 - <<'PY'
+          from pathlib import Path
+          forbidden = (chr(0x2013), chr(0x2014))
+          bad = []
+          for path in [Path('README.md'), *Path('docs').rglob('*.md')]:
+              text = path.read_text()
+              if any(char in text for char in forbidden):
+                  bad.append(str(path))
+          if bad:
+              raise SystemExit('Long dash punctuation found in: ' + ', '.join(bad))
+          PY
 
       - name: Commit final screenshot presentation
+        shell: bash
         run: |
           set -euo pipefail
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
-          git commit -m 'Use full-resolution ConceptLab product screenshots'
+          git commit -m 'Use high-resolution ConceptLab product screenshots'
           git push origin HEAD:main
