@@ -42,15 +42,16 @@
   <a href="#product-workflow">Product</a> ·
   <a href="#engineering-highlights">Engineering</a> ·
   <a href="#development-evolution">Evolution</a> ·
+  <a href="#user-testing">Testing</a> ·
   <a href="#verification">Verification</a> ·
-  <a href="#run-locally">Run locally</a>
+  <a href="#my-role-and-repository-scope">My role</a>
 </p>
 
 ## Why I built it
 
 ConceptLab began with a learning problem I kept seeing: reviewing notes and recognizing definitions did not guarantee that someone could apply a concept when the context changed.
 
-I built the product around that gap. A StudySet combines source material, fresh practice, unit testing, feedback, related resources, and saved progress in one repeatable workflow. The design principle is simple: **application matters more than memorization alone, and a mistake should lead to the next useful learning step.**
+I wanted one workflow that connected source material, fresh practice, unit testing, feedback, related resources, and review. The design principle became simple: **application matters more than memorization alone, and a mistake should lead to the next useful learning step.**
 
 That principle shaped the engineering too. Fresh practice should not collapse into near-duplicate prompts, and generated output should not become application data simply because an API returned it.
 
@@ -93,7 +94,7 @@ The system can build flashcards, a broader unit-test bank, related learning reso
 
 Users can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique.
 
-Those controls are not cosmetic. They influence prompt construction, generation constraints, duplicate filtering, and the `Question` objects admitted into the StudySet.
+Those controls influence prompt construction, generation constraints, duplicate filtering, and the `Question` objects admitted into the StudySet.
 
 ### 3. Turn mistakes into the next step
 
@@ -131,7 +132,7 @@ ConceptLab stores desktop StudySets under the user's home directory in a version
 
 Collection sections declare expected record counts, and loading checks those counts against the records actually parsed. Older question formats remain readable after the question model evolved. Because user-authored content can contain pipes, backslashes, and newlines, [`EscapeUtil.java`](EscapeUtil.java) explicitly escapes and restores reserved characters so content can round-trip without corrupting record boundaries.
 
-I chose this local-first design because the core product did not need a hosted database. It kept setup smaller while still requiring careful decisions about format versioning, validation, backward compatibility, and corruption handling.
+I chose this local-first design because the core product did not need a hosted database. It kept setup smaller while still requiring decisions about format versioning, validation, backward compatibility, and corruption handling.
 
 ## Development evolution
 
@@ -149,6 +150,8 @@ The project improved most when I stopped treating additional features as the sam
 | Model responses could be malformed, repetitive, rate-limited, unavailable, or cut off at an output limit | Add structured contracts, validation, batching, retries, token budgeting, deduplication, and fallbacks | Generation became a guarded pipeline rather than a single API call |
 | Testing with other people made clarity and usefulness more important than the feature checklist | Make practice configurable and connect mistakes back to learning material | A more repeatable and understandable study workflow |
 | A public demo risked exposing credentials or creating a second implementation | Keep the Java/Swing sources authoritative, then add explicit browser runtime, storage, and AI boundaries | Immediate browser access without replacing the original project |
+
+ConceptLab changed how I think about engineering in three connected ways: a feature only matters if it improves the real problem, external behavior should be validated before the rest of the system trusts it, and technical choices such as deduplication, background work, persistence, and failure handling are product decisions because they shape whether the tool feels dependable to use.
 
 ## User testing
 
@@ -207,45 +210,24 @@ ConceptLab is still fundamentally a local-first Java application. The durable do
 
 I do not present that concentration as ideal. If I continued the project as a larger production system, I would separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over performing a late refactor only to make the repository appear more modular.
 
-That trade-off is intentional documentation, not an attempt to hide the remaining architecture debt. The deeper implementation walkthrough is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
-
-## Technology
-
-| Area | Technology and role |
-| --- | --- |
-| Desktop application | Java 21 |
-| Interface | Swing and AWT |
-| Networking | Java HTTP Client |
-| Generative system | Groq OpenAI-compatible API |
-| Structured output | Dependency-free JSON parsing, provider schemas, and domain validation |
-| Persistence | Versioned local `.clab` files |
-| Concurrency | `SwingWorker` for background generation and grading flows |
-| Browser runtime | CheerpJ Core 4.3 with a Java 17 artifact built from canonical sources |
-| Browser AI boundary | Vercel Function with private server-side credentials and constrained task contracts |
-| Verification | GitHub Actions, Java assertions, Node contract tests, Playwright, and reproducible UI capture |
-| Hosting | Vercel |
+The deeper implementation walkthrough is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Core source map
 
-- **[`Main.java`](Main.java):** Swing UI, navigation, generation pipeline, quiz lifecycle, API calls, fallbacks, and orchestration.
-- **[`StudySet.java`](StudySet.java):** aggregate model, duplicate prevention, versioned persistence, and backward-compatible loading.
-- **[`Question.java`](Question.java):** MCQ and short-answer model, invariants, normalized keys, feedback, and answer checking.
-- **[`EscapeUtil.java`](EscapeUtil.java):** escaping helpers for the custom persistence format.
-- **[`api/conceptlab/ai.js`](api/conceptlab/ai.js):** constrained server-side browser bridge for generation.
-- **[`browser/build-browser.py`](browser/build-browser.py):** reproducibly adapts canonical Java sources into the CheerpJ browser artifact.
-- **[`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java):** regression checks for the core model and persistence layer.
-- **[`tests/GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java):** regression checks for source chunking, token budgeting, generated-question filtering, deterministic fallbacks, uniqueness, and offline grading.
-- **[`tests/browser-api.test.js`](tests/browser-api.test.js):** browser bridge contract, schema, failover, and failure-safety tests.
-- **[`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs):** deployed browser smoke test for startup, persistence, reset, AI, and credential exposure.
+- **[`Main.java`](Main.java):** Swing UI, navigation, generation pipeline, quiz lifecycle, API calls, fallbacks, background work, and orchestration.
+- **[`StudySet.java`](StudySet.java):** aggregate model, duplicate prevention, versioned persistence, corruption checks, and backward-compatible loading.
+- **[`Question.java`](Question.java):** MCQ and short-answer model, structural invariants, normalized keys, feedback, and answer checking.
+- **[`api/conceptlab/ai.js`](api/conceptlab/ai.js):** constrained server-side browser bridge with task contracts, credential isolation, and provider failure handling.
+- **[`browser/build-browser.py`](browser/build-browser.py):** reproducibly adapts the canonical Java sources into the CheerpJ browser artifact.
+
+Verification is split across [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java), [`tests/GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java), [`tests/browser-api.test.js`](tests/browser-api.test.js), and [`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs).
 
 ## Run locally
 
-### Requirements
+**JDK 21 is recommended.** A Groq API key enables full model-backed generation and AI feedback, but the interface can launch without one and several flows include local fallbacks.
 
-- **JDK 21 recommended**
-- A Groq API key for full model-backed generation and AI feedback
-
-The interface can launch without an API key, and several generation and checking paths include local fallbacks.
+<details>
+<summary><strong>Local setup and verification</strong></summary>
 
 ### Configure Groq
 
@@ -284,17 +266,13 @@ java -ea -cp .:tests GenerationPolicySelfTest
 
 On Windows, replace the classpath separator `:` with `;`.
 
-## What I learned
-
-ConceptLab changed how I think about engineering in three ways: a feature only matters if it improves the real problem, external behavior should be validated before the rest of the system trusts it, and technical choices such as deduplication, background work, persistence, and failure handling are product decisions because they directly shape whether the tool feels dependable to use.
+</details>
 
 ## My role and repository scope
 
 **ConceptLab was independently designed and developed by Kevin Zhu.**
 
 I owned the project end to end: the learning problem and product direction, StudySet workflow, Swing interface, flashcards, practice and unit tests, feedback, resource linking, persistence format, domain validation, Groq integration, reliability work, debugging, user testing, browser adaptation, public deployment, verification, and documentation.
-
-Development tools, including AI-assisted coding tools, were part of the programming workflow. The product decisions, requirements, integration work, testing, debugging, and final project ownership were mine.
 
 > **Repository history:** This is a curated public release of ConceptLab. Its visible Git history primarily reflects public cleanup, verification, browser deployment work, screenshot preparation, and documentation rather than the complete development timeline.
 
