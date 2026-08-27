@@ -33,6 +33,20 @@ The main runtime flow is:
 
 The visual version of this flow is in [`media/generation-pipeline.svg`](media/generation-pipeline.svg).
 
+## Browser edition boundary
+
+The browser edition keeps the desktop source files authoritative. [`browser/build-browser.py`](../browser/build-browser.py) applies a small browser-only patch set, compiles Java 17 bytecode, and packages a deterministic JAR for CheerpJ 4.3. The normal desktop application continues to use the local filesystem and direct environment configuration without depending on Vercel or a browser runtime.
+
+In the browser build:
+
+- CheerpJ runs the real Swing application and maps `user.home` to its persistent `/files` filesystem;
+- the bundled Newtonian Mechanics StudySet is copied into persistent storage without deleting user-created sets;
+- AI calls use a constrained same-origin server endpoint, while provider credentials remain server-side;
+- each launch passes a unique token to Java, and Java writes that token only after storage setup and Swing initialization finish;
+- CheerpJ's internal Java clipboard avoids browser permission prompts during anonymous startup.
+
+The production smoke workflow verifies the deployed commit metadata and JAR hash before exercising live AI, Java startup, StudySet persistence, refresh behavior, and the scoped demo reset.
+
 ## Major components
 
 ### [`Main.java`](../Main.java)
