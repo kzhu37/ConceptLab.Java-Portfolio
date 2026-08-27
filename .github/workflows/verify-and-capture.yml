@@ -42,10 +42,13 @@ jobs:
         run: javac *.java
 
       - name: Compile verification tools
-        run: javac -cp . tests/ConceptLabSelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
+        run: javac -cp . tests/ConceptLabSelfTest.java tests/GenerationPolicySelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
 
       - name: Run core self-tests
         run: java -ea -cp .:tests ConceptLabSelfTest
+
+      - name: Run generation-policy self-tests
+        run: java -ea -cp .:tests GenerationPolicySelfTest
 
       - name: Verify bundled browser demo StudySet
         run: java -ea -cp .:tests BrowserSeedSelfTest
