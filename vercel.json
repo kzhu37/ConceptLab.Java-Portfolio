@@ -3,7 +3,6 @@
   "installCommand": "dnf install -y java-17-amazon-corretto-devel && npm install",
   "buildCommand": "python3 browser/build-browser.py --output ConceptLab-browser.jar && python3 browser/normalize-jar.py ConceptLab-browser.jar && npm test && npm run verify:static && python3 browser/build-site.py",
   "outputDirectory": "dist",
-  "alias": ["conceptlab-browser.vercel.app"],
   "functions": {
     "api/conceptlab/ai.js": {
       "maxDuration": 60
