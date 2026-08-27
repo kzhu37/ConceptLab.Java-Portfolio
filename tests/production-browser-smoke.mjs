@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { chromium } from "playwright";
 
@@ -85,6 +86,11 @@ async function verifyStaticSurface() {
   const jarBytes = new Uint8Array(await jar.arrayBuffer());
   assert.ok(jarBytes.byteLength > 50_000, `browser JAR unexpectedly small: ${jarBytes.byteLength}`);
   assertNoCredentialMarker(jarBytes, "browser JAR");
+  const repositoryJar = fs.readFileSync("ConceptLab-browser.jar");
+  const deployedHash = createHash("sha256").update(jarBytes).digest("hex");
+  const repositoryHash = createHash("sha256").update(repositoryJar).digest("hex");
+  assert.equal(deployedHash, repositoryHash, "production JAR does not match the current GitHub revision");
+  console.log(`Production JAR matches GitHub at ${deployedHash}.`);
 }
 
 async function verifyProductionAi() {
@@ -223,4 +229,3 @@ await verifyStaticSurface();
 await verifyProductionAi();
 await verifyBrowserRuntime();
 console.log("ConceptLab production browser smoke checks passed.");
-
