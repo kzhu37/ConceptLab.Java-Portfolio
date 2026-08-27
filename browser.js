@@ -18,6 +18,7 @@
     window.setTimeout(resolve, milliseconds);
   });
 
+  // Browser AI requests stay same-origin; provider credentials remain server-side.
   const AI_BRIDGE_PATH = "/api/conceptlab/ai";
   const AI_BRIDGE_TIMEOUT_MS = 45_000;
 
