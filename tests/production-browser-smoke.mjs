@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { chromium } from "playwright";
 
-const BASE_URL = (process.env.CONCEPTLAB_BASE_URL || "https://conceptlab-browser-xiangseanzhu-7370.vercel.app").replace(/\/$/, "");
+const BASE_URL = (process.env.CONCEPTLAB_BASE_URL || "https://conceptlab-browser.vercel.app").replace(/\/$/, "");
 const EXPECTED_COMMIT = process.env.GITHUB_SHA || "";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

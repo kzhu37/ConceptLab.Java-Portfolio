@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://conceptlab-browser-xiangseanzhu-7370.vercel.app"><strong>Run ConceptLab in your browser</strong></a>
+  <a href="https://conceptlab-browser.vercel.app"><strong>Run ConceptLab in your browser</strong></a>
 </p>
 
 <p align="center">
@@ -65,7 +65,7 @@ The production browser strategy uses `openai/gpt-oss-20b` first because ConceptL
 
 The browser application also makes generation state visible to users. Loading dialogs can report primary generation, retrying, backup generation, batch progress, validation, partial success, and failure. A failed operation offers a retry and explicitly states that the existing StudySet was not modified.
 
-**Live browser:** [conceptlab-browser-xiangseanzhu-7370.vercel.app](https://conceptlab-browser-xiangseanzhu-7370.vercel.app)
+**Live browser:** [conceptlab-browser-xiangseanzhu-7370.vercel.app](https://conceptlab-browser.vercel.app)
 
 ## At a glance
 
