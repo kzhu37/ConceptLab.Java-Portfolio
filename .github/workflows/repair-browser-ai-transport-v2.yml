@@ -18,6 +18,24 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Correct temporary repair script quoting
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          path = Path("tools/repair_browser_ai_transport.py")
+          text = path.read_text(encoding="utf-8")
+          old_start = "transport_patch = header_patch + r'''"
+          new_start = 'transport_patch = header_patch + r"""'
+          if text.count(old_start) != 1:
+              raise SystemExit(f"transport quote start expected once, found {text.count(old_start)}")
+          text = text.replace(old_start, new_start, 1)
+          old_end = "\n'''\nbuild = replace_once(build, header_patch, transport_patch, \"insert browser transport patch\")"
+          new_end = '\n"""\nbuild = replace_once(build, header_patch, transport_patch, "insert browser transport patch")'
+          if text.count(old_end) != 1:
+              raise SystemExit(f"transport quote end expected once, found {text.count(old_end)}")
+          path.write_text(text.replace(old_end, new_end, 1), encoding="utf-8")
+          PY
+
       - name: Apply guarded transport repair
         run: python3 tools/repair_browser_ai_transport.py
 
