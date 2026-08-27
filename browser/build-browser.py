@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -404,11 +405,11 @@ def build(output: Path) -> None:
             shutil.copy2(logo, classes / logo.name)
 
         output.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(
-            ["jar", "--create", "--file", str(output), "--main-class", "Main", "-C", str(classes), "."],
-            check=True,
-            cwd=ROOT,
-        )
+        manifest = b"Manifest-Version: 1.0\r\nMain-Class: Main\r\n\r\n"
+        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+            archive.writestr("META-INF/MANIFEST.MF", manifest)
+            for class_file in sorted(path for path in classes.rglob("*") if path.is_file()):
+                archive.write(class_file, class_file.relative_to(classes).as_posix())
 
         subprocess.run(["jar", "--list", "--file", str(output)], check=True, cwd=ROOT)
 
@@ -422,4 +423,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"Browser build failed: {exc}", file=sys.stderr)
         raise
-

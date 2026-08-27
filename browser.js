@@ -67,7 +67,7 @@
       await cheerpjInit({
         version: 17,
         status: "none",
-        clipboardMode: "permission",
+        clipboardMode: "java",
         javaProperties: [
           "user.home=/files",
           "conceptlab.browser=true",
@@ -128,4 +128,3 @@
 
   launch();
 })();
-

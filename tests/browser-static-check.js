@@ -14,6 +14,7 @@ assert.match(index, /https:\/\/cjrtnc\.leaningtech\.com\/4\.3\/loader\.js/);
 assert.match(index, /Browser edition/);
 assert.match(index, /CheerpJ Community License/);
 assert.match(browser, /version:\s*17/);
+assert.match(browser, /clipboardMode:\s*"java"/);
 assert.match(browser, /user\.home=\/files/);
 assert.match(browser, /conceptlab\.api\.url=/);
 assert.match(browser, /conceptlab\.launchToken=/);
@@ -23,6 +24,8 @@ assert.match(api, /openai\/gpt-oss-120b/);
 assert.match(api, /type:\s*"json_schema"/);
 assert.match(api, /strict:\s*true/);
 assert.match(build, /javac.*--release/si);
+assert.match(build, /Manifest-Version: 1\.0/);
+assert.doesNotMatch(build, /--main-class/);
 assert.match(build, /appHome\.resolve\("browser-ready\.txt"\)/);
 
 // Reset Demo must only replace the bundled demo file. It must never sweep all
@@ -44,4 +47,3 @@ if (fs.existsSync(jarPath)) {
 }
 
 console.log("Browser static checks passed.");
-
