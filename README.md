@@ -58,8 +58,9 @@ That principle shaped the engineering too. Fresh practice should not collapse in
 | **Learning workflow** | Turns source material and learning goals into reusable StudySets with flashcards, fresh practice, unit assessments, feedback, and related resources. |
 | **Guarded generation** | Uses structured contracts, parsing, validation, batching, token budgeting, retries, duplicate filtering, provider failover, and deterministic local fallbacks. |
 | **Durable local data** | Stores versioned `.clab` StudySets without a database, with escaping, count checks, corruption handling, backward-compatible loading, and cross-bank duplicate protection. |
-| **Real iteration** | Used or tested by **60+ people during development**; repeated use changed practice controls, feedback, workflow, and reliability priorities. |
+| **Real iteration** | Outside testing changed practice controls, feedback, workflow, and reliability priorities rather than only adding features. |
 | **Public engineering proof** | Runs the real Java/Swing application in a browser and separately verifies the desktop core, browser boundary, deployment artifact, persistence, and live generation path. |
+| **My role** | Independently designed and developed the project end to end, from the learning problem and desktop application through browser adaptation and verification. |
 
 ## Product workflow
 
@@ -88,7 +89,14 @@ ConceptLab can build flashcards, a broader unit-assessment bank, related learnin
 
 Users can change question count, difficulty, response style, challenge level, whether previously seen prompts should be avoided, and whether correct-answer text should remain unique. Those settings influence prompt construction, generation constraints, duplicate filtering, and which `Question` objects are admitted into the StudySet.
 
-After a submitted response, ConceptLab can show correctness feedback, an explanation, a related resource, and related flashcards. Questions with known answer keys retain deterministic checking paths when remote grading is unavailable. The goal is not only to mark an answer right or wrong, but to reconnect the learner with the concept that needs attention.
+After a response, ConceptLab can show correctness feedback, an explanation, a related resource, and related flashcards. Questions with known answer keys retain deterministic checking paths when remote grading is unavailable. A mistake is therefore not only marked; it becomes the next review step.
+
+<p align="center">
+  <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab running an application-focused Newtonian Mechanics practice question in the browser edition" width="86%">
+</p>
+<p align="center">
+  <sub><strong>Practice proof:</strong> the public edition runs the Java/Swing workflow directly, including generated questions, saved StudySets, and the same validation rules used by the desktop application.</sub>
+</p>
 
 ## Engineering highlights
 
@@ -96,13 +104,11 @@ After a submitted response, ConceptLab can show correctness feedback, an explana
 
 Calling a model was the easy part. The harder problem was deciding when generated content was trustworthy enough to become real application data.
 
-ConceptLab requests task-specific structured output, parses it, validates its shape, converts valid records into domain objects, filters malformed or repeated items, and only then admits them into a StudySet. Larger question requests are divided into bounded batches, source material is chunked, output budgets account for prompt size, and responses cut off at the token limit are treated as failures rather than partial success.
+ConceptLab requests task-specific structured output, parses it, validates its shape, converts valid records into domain objects, filters malformed or repeated items, and only then admits them into a StudySet. Larger requests are divided into bounded batches, source material is chunked, output budgets account for prompt size, and responses cut off at the token limit are treated as failures rather than partial success.
 
 The generation layer also supports primary and fallback models, optional credential failover, retry handling for transient provider failures, duplicate protection, and deterministic local fallbacks for core study flows.
 
 ![ConceptLab generation pipeline from source material through guarded generation and validated StudySet models](docs/media/generation-pipeline.svg)
-
-The orchestration lives primarily in [`Main.java`](Main.java). Durable invariants are enforced by [`StudySet.java`](StudySet.java), [`Question.java`](Question.java), [`Flashcard.java`](Flashcard.java), [`ResourceLink.java`](ResourceLink.java), and [`EscapeUtil.java`](EscapeUtil.java).
 
 **The important shift was treating generated output as untrusted external data, not as a trusted internal return value.**
 
@@ -120,13 +126,13 @@ ConceptLab stores desktop StudySets under the user's home directory in a version
 
 Collection sections declare expected record counts, and loading checks those counts against the records actually parsed. Older question formats remain readable after the question model evolved. Because user-authored content can contain pipes, backslashes, and newlines, [`EscapeUtil.java`](EscapeUtil.java) explicitly escapes and restores reserved characters so content can round-trip without corrupting record boundaries.
 
-I chose this local-first design because the core product did not need a hosted database. It kept setup smaller while still requiring decisions about format versioning, validation, backward compatibility, and corruption handling.
+I chose this local-first design because the product did not need a hosted database. It kept setup smaller while still requiring format versioning, validation, backward compatibility, and corruption handling.
 
 ### 4. Keeping long-running work off the Swing event thread
 
 Generation and grading can involve network calls, retries, parsing, and fallback work. ConceptLab runs potentially slow flows through `SwingWorker` behind a cancellable loading experience rather than blocking Swing's event-dispatch thread.
 
-This was a product decision as much as a concurrency decision: a study tool that freezes during its most important operations does not feel dependable, even if the underlying request eventually succeeds.
+This was a product decision as much as a concurrency decision: a study tool that freezes during its most important operations does not feel dependable, even if the request eventually succeeds.
 
 ## Development evolution
 
@@ -144,13 +150,11 @@ The project improved most when I stopped treating additional features as the sam
 | Model responses could be malformed, repetitive, rate-limited, unavailable, or cut off at an output limit | Add structured contracts, validation, batching, retries, token budgeting, deduplication, and fallbacks | Generation became a guarded pipeline rather than a single API call |
 | A public demo risked exposing credentials or creating a second implementation | Keep the Java/Swing sources authoritative, then add explicit browser runtime, storage, and AI boundaries | Immediate browser access without replacing the original project |
 
-ConceptLab changed how I think about engineering in three connected ways: a feature only matters if it improves the real problem, external behavior should be validated before the rest of the system trusts it, and technical choices such as deduplication, background work, persistence, and failure handling are product decisions because they shape whether the tool feels dependable to use.
+Three ideas now define the project: a feature matters only if it improves the real problem, external behavior should be validated before the rest of the system trusts it, and reliability decisions are product decisions because users experience their consequences directly.
 
 ## User testing
 
 ConceptLab was used or tested by **60+ people during development**, including friends, peers, and other users. Several went beyond a one-time test and used it to support their own learning.
-
-Testing changed the product in concrete ways:
 
 | What testing exposed | Product or engineering response |
 | --- | --- |
@@ -159,24 +163,17 @@ Testing changed the product in concrete ways:
 | A wrong answer alone did not tell the learner what to do next | Connect feedback to explanation, related resources, and related flashcards |
 | More controls could make the product harder to use | Remove complexity that did not improve studying and keep the workflow utility-first |
 
-I tracked testing and iteration, not production analytics, so I do not claim active-user counts, retention, grade improvement, or controlled learning outcomes. The fuller testing record and claim boundaries are in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
+I tracked testing and iteration, not production analytics. I do not claim active-user counts, retention, grade improvement, or controlled learning outcomes. The exact scope and claim boundaries are documented in [`docs/USER_TESTING.md`](docs/USER_TESTING.md).
 
 ## Browser edition
 
 ConceptLab began as a Java/Swing desktop application. I added the public browser edition later so the project could be opened immediately without a local Java installation or a visitor-provided API key.
 
-The desktop Java sources remain authoritative. [`browser/build-browser.py`](browser/build-browser.py) applies a small exact-match patch set, compiles a Java 17 artifact, and packages it for **CheerpJ Core 4.3**. The browser version adds three explicit boundaries:
+The desktop Java sources remain authoritative. [`browser/build-browser.py`](browser/build-browser.py) applies a small exact-match patch set, compiles a Java 17 artifact, and packages it for **CheerpJ Core 4.3**. The browser adaptation adds three explicit boundaries:
 
 1. **Runtime:** CheerpJ executes the Java/Swing application in the browser.
 2. **Persistence:** StudySets use CheerpJ's persistent `/files` filesystem, with a resettable Newtonian Mechanics demo seeded for first-time use.
 3. **AI security:** browser generation goes through [`api/conceptlab/ai.js`](api/conceptlab/ai.js), which keeps Groq credentials server-side and accepts only ConceptLab's constrained request contracts.
-
-<p align="center">
-  <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab browser edition running the Java Swing application with an application-focused Newtonian Mechanics quiz" width="86%">
-</p>
-<p align="center">
-  <sub>The public edition runs the Java/Swing application through CheerpJ while preserving persistent StudySets and a server-side AI boundary.</sub>
-</p>
 
 > **Browser demo note:** This is a public adaptation of the desktop application, not a separate web rewrite. Browser-specific transport and storage behavior are added only at explicit boundaries.
 
@@ -203,17 +200,15 @@ ConceptLab is still fundamentally a local-first Java application. The durable do
 
 I do not present that concentration as ideal. If I continued the project as a larger production system, I would separate networking, generation, storage, and quiz services. For this version, I prioritized stabilizing the complete product and validating the learning workflow over performing a late refactor only to make the repository appear more modular.
 
-The deeper implementation walkthrough is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+| Component | Main responsibility |
+| --- | --- |
+| [`Main.java`](Main.java) | Swing UI, navigation, generation pipeline, quiz lifecycle, API calls, fallbacks, background work, and orchestration |
+| [`StudySet.java`](StudySet.java) | Aggregate model, duplicate prevention, versioned persistence, corruption checks, and backward-compatible loading |
+| [`Question.java`](Question.java) | MCQ and short-answer model, structural invariants, normalized keys, feedback, and answer checking |
+| [`api/conceptlab/ai.js`](api/conceptlab/ai.js) | Constrained server-side browser bridge, credential isolation, and provider failure handling |
+| [`browser/build-browser.py`](browser/build-browser.py) | Reproducible adaptation of canonical Java sources into the CheerpJ browser artifact |
 
-## Core source map
-
-- **[`Main.java`](Main.java):** Swing UI, navigation, generation pipeline, quiz lifecycle, API calls, fallbacks, background work, and orchestration.
-- **[`StudySet.java`](StudySet.java):** aggregate model, duplicate prevention, versioned persistence, corruption checks, and backward-compatible loading.
-- **[`Question.java`](Question.java):** MCQ and short-answer model, structural invariants, normalized keys, feedback, and answer checking.
-- **[`api/conceptlab/ai.js`](api/conceptlab/ai.js):** constrained server-side browser bridge with task contracts, credential isolation, and provider failure handling.
-- **[`browser/build-browser.py`](browser/build-browser.py):** reproducibly adapts the canonical Java sources into the CheerpJ browser artifact.
-
-Verification is split across [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java), [`tests/GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java), [`tests/browser-api.test.js`](tests/browser-api.test.js), and [`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs).
+Verification is split across [`tests/ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java), [`tests/GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java), [`tests/browser-api.test.js`](tests/browser-api.test.js), and [`tests/production-browser-smoke.mjs`](tests/production-browser-smoke.mjs). The deeper implementation walkthrough is in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Run locally
 
