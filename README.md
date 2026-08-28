@@ -28,7 +28,7 @@
     </td>
   </tr>
   <tr>
-    <td align="center"><sub><strong>StudySet:</strong> flashcards, practice, unit testing, resources, and saved progress in one workflow.</sub></td>
+    <td align="center"><sub><strong>StudySet:</strong> flashcards, practice, unit assessments, resources, and saved progress in one workflow.</sub></td>
     <td align="center"><sub><strong>Feedback loop:</strong> an incorrect response becomes a correction, a relevant simulation, and related flashcards to review next.</sub></td>
   </tr>
 </table>
@@ -55,7 +55,7 @@ That principle shaped the engineering too. Fresh practice should not collapse in
 
 | Area | What ConceptLab demonstrates |
 | --- | --- |
-| **Learning workflow** | Turns source material and learning goals into reusable StudySets with flashcards, fresh practice, unit tests, feedback, and related resources. |
+| **Learning workflow** | Turns source material and learning goals into reusable StudySets with flashcards, fresh practice, unit assessments, feedback, and related resources. |
 | **Guarded generation** | Uses structured contracts, parsing, validation, batching, token budgeting, retries, duplicate filtering, provider failover, and deterministic local fallbacks. |
 | **Durable local data** | Stores versioned `.clab` StudySets without a database, with escaping, count checks, corruption handling, backward-compatible loading, and cross-bank duplicate protection. |
 | **Real iteration** | Used or tested by **60+ people during development**; repeated use changed practice controls, feedback, workflow, and reliability priorities. |
@@ -82,7 +82,7 @@ A StudySet starts with the user's own material and can include learning goals, c
   </tr>
 </table>
 
-ConceptLab can build flashcards, a broader unit-test bank, related learning resources, and fresh practice generated on demand.
+ConceptLab can build flashcards, a broader unit-assessment bank, related learning resources, and fresh practice generated on demand.
 
 ### 2. Practice, adapt, and review
 
@@ -110,13 +110,13 @@ The orchestration lives primarily in [`Main.java`](Main.java). Durable invariant
 
 ConceptLab biases practice toward computation, inference, interpretation, method selection, error diagnosis, and explanation rather than repeated definition recall.
 
-That goal is enforced below the prompt layer. `StudySet` prevents duplicate IDs and normalized duplicate prompts, and it keeps practice and unit-test banks disjoint. `Question` validates response type, MCQ structure, choice uniqueness, answer indices, difficulty, and stable identity at construction time.
+That goal is enforced below the prompt layer. `StudySet` prevents duplicate IDs and normalized duplicate prompts, and it keeps practice and assessment banks disjoint. `Question` validates response type, MCQ structure, choice uniqueness, answer indices, difficulty, and stable identity at construction time.
 
 If the goal is transfer, a technically valid but nearly repeated question is still a weak result.
 
 ### 3. Choosing local persistence instead of unnecessary infrastructure
 
-ConceptLab stores desktop StudySets under the user's home directory in a versioned `.clab` format. Each file records metadata, flashcards, practice questions, unit-test questions, resources, and the best unit-test score.
+ConceptLab stores desktop StudySets under the user's home directory in a versioned `.clab` format. Each file records metadata, flashcards, practice questions, unit-assessment questions, resources, and the best assessment score.
 
 Collection sections declare expected record counts, and loading checks those counts against the records actually parsed. Older question formats remain readable after the question model evolved. Because user-authored content can contain pipes, backslashes, and newlines, [`EscapeUtil.java`](EscapeUtil.java) explicitly escapes and restores reserved characters so content can round-trip without corrupting record boundaries.
 
@@ -140,7 +140,7 @@ The project improved most when I stopped treating additional features as the sam
 | --- | --- | --- |
 | JavaFX and embedded-UI integration created build and dependency friction | Move the desktop interface to Swing and simplify the project structure | Faster iteration and a more dependable local build |
 | Early development rewarded feature count | Shift from feature-first to utility-first design | A clearer learning loop with less unnecessary interface complexity |
-| Detailed analytics would add storage and UI work without solving the core problem | Keep only the best unit-test score | Useful progress feedback without infrastructure for its own sake |
+| Detailed analytics would add storage and UI work without solving the core problem | Keep only the best unit-assessment score | Useful progress feedback without infrastructure for its own sake |
 | Model responses could be malformed, repetitive, rate-limited, unavailable, or cut off at an output limit | Add structured contracts, validation, batching, retries, token budgeting, deduplication, and fallbacks | Generation became a guarded pipeline rather than a single API call |
 | A public demo risked exposing credentials or creating a second implementation | Keep the Java/Swing sources authoritative, then add explicit browser runtime, storage, and AI boundaries | Immediate browser access without replacing the original project |
 
@@ -154,7 +154,7 @@ Testing changed the product in concrete ways:
 
 | What testing exposed | Product or engineering response |
 | --- | --- |
-| Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and unit-test banks |
+| Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and assessment banks |
 | Different users wanted different kinds of practice | Make question count, difficulty, response mix, and challenge level configurable |
 | A wrong answer alone did not tell the learner what to do next | Connect feedback to explanation, related resources, and related flashcards |
 | More controls could make the product harder to use | Remove complexity that did not improve studying and keep the workflow utility-first |
@@ -279,7 +279,7 @@ python3 browser/normalize-jar.py ConceptLab-browser.jar
 
 **ConceptLab was independently designed and developed by Kevin Zhu.**
 
-I owned the project end to end: the learning problem and product direction, StudySet workflow, Swing interface, flashcards, practice and unit tests, feedback, resource linking, persistence format, domain validation, Groq integration, reliability work, debugging, user testing, browser adaptation, public deployment, verification, and documentation.
+I owned the project end to end: the learning problem and product direction, StudySet workflow, Swing interface, flashcards, practice and unit assessments, feedback, resource linking, persistence format, domain validation, Groq integration, reliability work, debugging, user testing, browser adaptation, public deployment, verification, and documentation.
 
 > **Repository history:** This is a curated public release of ConceptLab. Its visible Git history primarily reflects public cleanup, verification, browser deployment work, screenshot preparation, and documentation rather than the complete development timeline.
 
