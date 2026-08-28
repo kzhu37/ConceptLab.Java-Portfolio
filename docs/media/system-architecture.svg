@@ -83,7 +83,7 @@
   <path d="M1010 376 V413" class="arrow"/>
 
   <rect x="830" y="590" width="300" height="72" rx="13" class="box-secure"/>
-  <text x="980" y="619" text-anchor="middle" class="label">Vercel server function → Groq</text>
+  <text x="980" y="619" text-anchor="middle" class="label">Vercel server function to Groq</text>
   <text x="980" y="643" text-anchor="middle" class="small">provider credentials stay server-side</text>
   <path d="M1010 506 V583" class="arrow"/>
 
