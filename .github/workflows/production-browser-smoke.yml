@@ -20,8 +20,10 @@ jobs:
       CONCEPTLAB_BASE_URL: https://conceptlab-browser.vercel.app
 
     steps:
-      - name: Check out repository
+      - name: Check out repository history
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set up Node 24
         uses: actions/setup-node@v6
