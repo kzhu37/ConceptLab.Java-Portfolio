@@ -4,11 +4,13 @@ on:
   push:
     branches: [main, browser-deployment]
     paths-ignore:
-      - 'docs/media/**'
+      - 'docs/media/*.png'
+      - 'docs/media/*.webp'
   pull_request:
     branches: [main]
     paths-ignore:
-      - 'docs/media/**'
+      - 'docs/media/*.png'
+      - 'docs/media/*.webp'
   workflow_dispatch:
 
 permissions:
@@ -43,13 +45,16 @@ jobs:
         run: javac *.java
 
       - name: Compile verification tools
-        run: javac -cp . tests/ConceptLabSelfTest.java tests/GenerationPolicySelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
+        run: javac -cp . tests/ConceptLabSelfTest.java tests/GenerationPolicySelfTest.java tests/QuestionAnswerPolicySelfTest.java tests/BrowserSeedSelfTest.java tools/PortfolioCapture.java
 
       - name: Run core self-tests
         run: java -ea -cp .:tests ConceptLabSelfTest
 
       - name: Run generation-policy self-tests
         run: java -ea -cp .:tests GenerationPolicySelfTest
+
+      - name: Run question-answer policy self-tests
+        run: java -ea -cp .:tests QuestionAnswerPolicySelfTest
 
       - name: Verify bundled browser demo StudySet
         run: java -ea -cp .:tests BrowserSeedSelfTest
@@ -69,11 +74,12 @@ jobs:
       - name: Enforce portfolio punctuation policy
         shell: bash
         run: |
-          if grep -RInP '[\x{2010}-\x{2015}\x{2E3A}\x{2E3B}]' README.md docs/*.md; then
+          if grep -RInP '[\x{2010}-\x{2015}\x{2E3A}\x{2E3B}]' \
+            README.md docs/*.md THIRD_PARTY_NOTICES.md index.html docs/media/*.svg; then
             echo 'Long dash detected in public portfolio writing.'
             exit 1
           fi
-          echo 'Portfolio Markdown contains no em dashes or en dashes.'
+          echo 'Public portfolio writing contains no em dashes or en dashes.'
 
       - name: Scan public tree and browser artifact for Groq-style secrets
         shell: bash

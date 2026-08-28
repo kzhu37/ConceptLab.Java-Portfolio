@@ -228,8 +228,12 @@ public final class Question {
     }
 
     /**
-     * Evaluates short-answer text with normalization and loose containment
-     * checks.
+     * Evaluates a known-key short answer conservatively after normalization.
+     *
+     * <p>
+     * Exact matches are accepted. A longer response is also accepted when it
+     * contains the complete stored key. Partial fragments are not accepted
+     * merely because they appear inside the key.
      */
     public boolean checkAnswerText(String userAnswer) {
         if (userAnswer == null || userAnswer.isBlank()) {
@@ -240,7 +244,7 @@ public final class Question {
         if (key.isBlank()) {
             return false;
         }
-        return user.equals(key) || user.contains(key) || key.contains(user);
+        return user.equals(key) || user.contains(key);
     }
 
     /**
