@@ -40,7 +40,7 @@ That changed the way I evaluated progress. A feature was no longer automatically
 | Observation or product question | Resulting direction |
 | --- | --- |
 | Recognition alone was not the learning problem I wanted to solve | Emphasize application, inference, method selection, error diagnosis, and explanation in generated practice |
-| Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and unit-test banks |
+| Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and assessment banks |
 | Different users wanted different kinds of practice | Make quiz length, difficulty, response mix, and challenge level configurable |
 | A wrong answer should lead to a next step | Connect question feedback with related resources and flashcards |
 | More controls and features could make the tool harder to use | Shift from feature-first development toward utility-first design |
