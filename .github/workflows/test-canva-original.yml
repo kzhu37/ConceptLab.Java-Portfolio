@@ -1,0 +1,30 @@
+name: Test Canva original asset URL
+
+on:
+  push:
+    branches: [canva-original-test]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Try original asset URL variants
+        shell: bash
+        run: |
+          set -u
+          base='ifs%3A%2F%2FM%2F914c885f-52fe-4855-98d2-7c12c2059108'
+          q='csig=AAAAAAAAAAAAAAAAAAAAABZmvdbi_UaRZfM9H3vdIkBQT63wHeeGFPOEjgvmReCh&exp=1787970433&osig=AAAAAAAAAAAAAAAAAAAAAJ8QGk2rIpFcR0j_31542UBWxXuwaSxiYjsSKX_XNT3X&signer=media-rpc'
+          urls=(
+            "https://media.canva.com/v2/files/uri:${base}?${q}"
+            "https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:${base}/watermark:F/width:1920?${q}&x-canva-quality=screen"
+            "https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:${base}/watermark:F/width:1920?exp=1787970433&osig=AAAAAAAAAAAAAAAAAAAAAJ8QGk2rIpFcR0j_31542UBWxXuwaSxiYjsSKX_XNT3X&signer=media-rpc&x-canva-quality=screen"
+          )
+          i=0
+          for url in "${urls[@]}"; do
+            out="/tmp/out-$i"
+            code=$(curl -L -sS -o "$out" -w '%{http_code}' "$url" || true)
+            echo "variant=$i status=$code size=$(wc -c < "$out" 2>/dev/null || echo 0)"
+            sha256sum "$out" 2>/dev/null || true
+            file "$out" 2>/dev/null || true
+            i=$((i+1))
+          done
