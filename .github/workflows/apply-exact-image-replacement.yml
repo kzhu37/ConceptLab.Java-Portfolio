@@ -1,0 +1,76 @@
+name: Apply exact ConceptLab image replacement
+
+on:
+  push:
+    branches:
+      - exact-conceptlab-image-replacement
+    paths:
+      - .github/workflows/apply-exact-image-replacement.yml
+
+permissions:
+  contents: write
+
+jobs:
+  replace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reconstruct exact images and update references
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .exact-image/part-* | base64 --decode > docs/media/browser-feedback-review.png
+          echo '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f  docs/media/browser-feedback-review.png' | sha256sum -c -
+
+          git show 4e8924cdae52931ca950779a38bcea51aa1a1e93:docs/media/answer-feedback.png > docs/media/browser-generated-quiz.png
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          text = p.read_text()
+          old1 = 'docs/media/browser-feedback-review.webp'
+          old2 = 'docs/media/browser-generated-quiz.webp'
+          assert text.count(old1) == 1
+          assert text.count(old2) == 1
+          text = text.replace(old1, 'docs/media/browser-feedback-review.png')
+          text = text.replace(old2, 'docs/media/browser-generated-quiz.png')
+          p.write_text(text)
+          PY
+
+          rm -f docs/media/browser-feedback-review.webp
+          rm -f docs/media/browser-generated-quiz.webp
+          rm -rf .exact-image
+          rm -f .github/workflows/apply-exact-image-replacement.yml
+
+      - name: Verify exact final state
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f docs/media/browser-feedback-review.png
+          test -f docs/media/browser-generated-quiz.png
+          test ! -e docs/media/browser-feedback-review.webp
+          test ! -e docs/media/browser-generated-quiz.webp
+          test ! -e .exact-image
+          grep -q 'docs/media/browser-feedback-review.png' README.md
+          grep -q 'docs/media/browser-generated-quiz.png' README.md
+          ! grep -q 'docs/media/browser-feedback-review.webp' README.md
+          ! grep -q 'docs/media/browser-generated-quiz.webp' README.md
+          echo '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f  docs/media/browser-feedback-review.png' | sha256sum -c -
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+          git status --short
+
+      - name: Commit exact replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Replace ConceptLab screenshots with exact PNG captures'
+          git push origin HEAD:exact-conceptlab-image-replacement
