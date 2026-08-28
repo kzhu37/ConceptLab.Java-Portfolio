@@ -1,0 +1,92 @@
+name: Recover exact ConceptLab screenshots
+
+on:
+  push:
+    branches:
+      - replace-conceptlab-images-final
+    paths:
+      - .github/workflows/recover-exact-screenshots.yml
+
+permissions:
+  contents: write
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recover exact historical screenshot bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git checkout 4e8924cdae52931ca950779a38bcea51aa1a1e93 -- .github/screenshots-payload
+          cat .github/screenshots-payload/part-* | base64 --decode > /tmp/conceptlab-screenshots.zip
+          mkdir -p /tmp/recovered
+          unzip -q /tmp/conceptlab-screenshots.zip -d /tmp/recovered
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, shutil
+
+          wanted = '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f'
+          matches = []
+          for p in Path('/tmp/recovered').rglob('*'):
+              if p.is_file():
+                  digest = hashlib.sha256(p.read_bytes()).hexdigest()
+                  print(digest, p)
+                  if digest == wanted:
+                      matches.append(p)
+          if len(matches) != 1:
+              raise SystemExit(f'Expected exactly one exact feedback screenshot, found {len(matches)}')
+          out = Path('docs/media/browser-feedback-review.png')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile(matches[0], out)
+          assert hashlib.sha256(out.read_bytes()).hexdigest() == wanted
+          PY
+
+          git show 4e8924cdae52931ca950779a38bcea51aa1a1e93:docs/media/answer-feedback.png > docs/media/browser-generated-quiz.png
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+
+      - name: Update only screenshot paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          for filename in ('README.md', 'docs/USER_TESTING.md'):
+              p = Path(filename)
+              text = p.read_text()
+              text = text.replace('browser-feedback-review.webp', 'browser-feedback-review.png')
+              text = text.replace('browser-generated-quiz.webp', 'browser-generated-quiz.png')
+              p.write_text(text)
+          PY
+          rm -f docs/media/browser-feedback-review.webp docs/media/browser-generated-quiz.webp
+          rm -rf .github/screenshots-payload
+          rm -f .github/workflows/recover-exact-screenshots.yml
+
+      - name: Verify exact result
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f  docs/media/browser-feedback-review.png' | sha256sum -c -
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+          test "$(stat -c%s docs/media/browser-feedback-review.png)" = 117549
+          test "$(stat -c%s docs/media/browser-generated-quiz.png)" = 95106
+          grep -q 'browser-feedback-review.png' README.md
+          grep -q 'browser-generated-quiz.png' README.md
+          grep -q 'browser-feedback-review.png' docs/USER_TESTING.md
+          ! grep -R -E 'browser-feedback-review\.webp|browser-generated-quiz\.webp' README.md docs/USER_TESTING.md
+          test ! -e docs/media/browser-feedback-review.webp
+          test ! -e docs/media/browser-generated-quiz.webp
+
+      - name: Commit exact replacements
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Replace ConceptLab screenshots with exact PNG captures'
+          git push origin HEAD:replace-conceptlab-images-final
