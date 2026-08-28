@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import fs from "node:fs";
 import { chromium } from "playwright";
@@ -6,6 +7,26 @@ import { chromium } from "playwright";
 const BASE_URL = (process.env.CONCEPTLAB_BASE_URL || "https://conceptlab-browser.vercel.app").replace(/\/$/, "");
 const EXPECTED_COMMIT = process.env.GITHUB_SHA || "";
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const PRODUCTION_FILES = new Set([
+  "Main.java",
+  "EscapeUtil.java",
+  "Flashcard.java",
+  "LoadingScreenFacts.java",
+  "Question.java",
+  "ResourceLink.java",
+  "ResourceType.java",
+  "StudySet.java",
+  "ConceptLabLogo.png",
+  "ConceptLabLogo.svg",
+  "ConceptLab-browser.jar",
+  "browser.css",
+  "browser.js",
+  "index.html",
+  "package.json",
+  "vercel.json",
+]);
+const PRODUCTION_PREFIXES = ["api/", "browser/", "demo/"];
 
 async function fetchWithRetry(path, options = {}, attempts = 60) {
   let lastError;
@@ -22,9 +43,24 @@ async function fetchWithRetry(path, options = {}, attempts = 60) {
   throw lastError || new Error(`Could not fetch ${path}`);
 }
 
-async function waitForCurrentDeployment() {
+function isProductionRelevant(file) {
+  return PRODUCTION_FILES.has(file) || PRODUCTION_PREFIXES.some((prefix) => file.startsWith(prefix));
+}
+
+function changedFilesBetween(baseCommit, headCommit) {
+  const output = execFileSync(
+    "git",
+    ["diff", "--name-only", `${baseCommit}..${headCommit}`],
+    { encoding: "utf8" },
+  ).trim();
+  return output ? output.split(/\r?\n/).filter(Boolean) : [];
+}
+
+async function waitForCompatibleDeployment() {
   if (!EXPECTED_COMMIT) return;
   let lastSeen = "none";
+  let lastRelevant = [];
+
   for (let attempt = 1; attempt <= 60; attempt += 1) {
     try {
       const response = await fetch(
@@ -38,15 +74,36 @@ async function waitForCurrentDeployment() {
           console.log(`Production deployment is current at ${EXPECTED_COMMIT}.`);
           return;
         }
+
+        if (/^[0-9a-f]{40}$/i.test(lastSeen)) {
+          try {
+            const changed = changedFilesBetween(lastSeen, EXPECTED_COMMIT);
+            lastRelevant = changed.filter(isProductionRelevant);
+            if (lastRelevant.length === 0) {
+              console.log(
+                `Production deployment ${lastSeen} is artifact-equivalent to ${EXPECTED_COMMIT}; `
+                + `${changed.length} changed file(s) are outside the production surface.`,
+              );
+              return;
+            }
+          } catch (error) {
+            lastRelevant = [`comparison unavailable: ${error instanceof Error ? error.message : String(error)}`];
+          }
+        }
       } else {
         lastSeen = `HTTP ${response.status}`;
       }
     } catch (error) {
       lastSeen = error instanceof Error ? error.message : String(error);
     }
+
     if (attempt < 60) await sleep(10_000);
   }
-  throw new Error(`Production did not reach expected commit ${EXPECTED_COMMIT}; last seen ${lastSeen}`);
+
+  const detail = lastRelevant.length > 0
+    ? `; production-relevant changes: ${lastRelevant.join(", ")}`
+    : "";
+  throw new Error(`Production did not become compatible with ${EXPECTED_COMMIT}; last seen ${lastSeen}${detail}`);
 }
 
 function assertNoCredentialMarker(bytes, label) {
@@ -65,11 +122,17 @@ function assertPublicConceptLabPage(html) {
   assert.match(html, /Java\/Swing browser edition/);
 }
 
+function assertTextParity(deployedText, repositoryPath, label) {
+  const repositoryText = fs.readFileSync(repositoryPath, "utf8");
+  assert.equal(deployedText, repositoryText, `${label} does not match the current repository`);
+}
+
 async function verifyStaticSurface() {
   const index = await fetchWithRetry("/");
   const html = await index.text();
   assertPublicConceptLabPage(html);
   assertNoCredentialMarker(Buffer.from(html), "index.html");
+  assertTextParity(html, "index.html", "production index.html");
 
   const browserJs = await fetchWithRetry("/browser.js");
   const browserText = await browserJs.text();
@@ -78,11 +141,17 @@ async function verifyStaticSurface() {
   assert.match(browserText, /Java_Main_browserApiFetch/);
   assert.match(browserText, /endpoint\.origin !== window\.location\.origin/);
   assertNoCredentialMarker(Buffer.from(browserText), "browser.js");
+  assertTextParity(browserText, "browser.js", "production browser.js");
+
+  const browserCss = await fetchWithRetry("/browser.css");
+  const browserCssText = await browserCss.text();
+  assertTextParity(browserCssText, "browser.css", "production browser.css");
 
   const demo = await fetchWithRetry("/demo/newtonian-mechanics.clab");
   const demoText = await demo.text();
   assert.match(demoText, /^CONCEPTLAB_STUDYSET\|v4/m);
   assert.match(demoText, /title=Newtonian Mechanics/);
+  assertTextParity(demoText, "demo/newtonian-mechanics.clab", "production demo StudySet");
 
   const jar = await fetchWithRetry("/ConceptLab-browser.jar");
   const jarBytes = new Uint8Array(await jar.arrayBuffer());
@@ -92,7 +161,7 @@ async function verifyStaticSurface() {
   const deployedHash = createHash("sha256").update(jarBytes).digest("hex");
   const repositoryHash = createHash("sha256").update(repositoryJar).digest("hex");
   assert.equal(deployedHash, repositoryHash, "production JAR does not match the current GitHub revision");
-  console.log(`Production JAR matches GitHub at ${deployedHash}.`);
+  console.log(`Production static assets and JAR match the current repository; JAR SHA-256 ${deployedHash}.`);
 }
 
 async function verifyProductionAi() {
@@ -226,7 +295,7 @@ async function verifyBrowserRuntime() {
   }
 }
 
-await waitForCurrentDeployment();
+await waitForCompatibleDeployment();
 await verifyStaticSurface();
 await verifyProductionAi();
 await verifyBrowserRuntime();
