@@ -2,15 +2,60 @@
 
 [Back to the README](../README.md)
 
-This document records how outside use shaped ConceptLab and defines exactly what the **60+ users and testers** figure means.
+ConceptLab was shared with **60+ users and testers during development**, including friends, peers, and other users. This document defines that figure carefully and shows how outside use connects to changes visible in the final repository.
 
 ## What the 60+ figure means
 
-During development, I shared ConceptLab with **60+ users and testers**, including friends, peers, and other users, so I could see whether the product made sense outside my own workflow. Several people went beyond a one-time test and used it to support their own learning.
+The figure counts people who used or tested ConceptLab while I was developing and iterating on it. Several people used it beyond a one-time walkthrough to support their own studying.
 
-The number represents people who used or tested ConceptLab during development and iteration. It is not a monthly-active-user count, retention metric, or controlled study population.
+It is not a monthly-active-user count, retention metric, formal survey sample, or controlled study population. I did not collect production telemetry or preserve a formal per-tester research dataset, so I do not present quotes, percentages, or learning outcomes that I cannot support.
 
-ConceptLab did not include production telemetry for:
+The defensible claim is narrower: **60+ people used or tested ConceptLab during development, and outside use materially influenced the product.**
+
+## What I was trying to learn
+
+The central product question was whether ConceptLab could help with a problem that notes alone did not solve: recognizing material is different from applying it when the context changes.
+
+Testing focused on practical questions:
+
+- Can another user understand the workflow without me explaining every step?
+- Does practice feel meaningfully different from rereading notes or definitions?
+- Are generated questions varied enough to remain useful?
+- Do users need different difficulty, response, or challenge settings?
+- Does feedback tell a learner what to review next?
+- Are added controls worth the complexity they introduce?
+
+That changed my definition of progress. A feature was not automatically valuable because it existed.
+
+## Representative iteration chains
+
+The strongest evidence is not the raw tester count. It is that observations led to specific decisions that remain visible and testable in the final project.
+
+| Observation from outside use | Product decision | Repository evidence |
+| --- | --- | --- |
+| Repetition made fresh practice less useful | Track normalized prompts, keep practice and assessment banks disjoint, add seen-question avoidance, and optionally require unique correct-answer text | [`StudySet.java`](../StudySet.java), [`Question.java`](../Question.java), [`GenerationPolicySelfTest.java`](../tests/GenerationPolicySelfTest.java), [practice settings](media/practice-settings.png) |
+| Different users wanted different kinds of practice | Make question count, difficulty, response mix, and challenge level configurable instead of creating separate workflows | [`Main.java`](../Main.java), [practice settings](media/practice-settings.png) |
+| A wrong answer alone did not give enough direction | Connect response feedback to an explanation, related resources, and related flashcards | [feedback example](media/browser-feedback-review.webp), [`Main.java`](../Main.java) |
+| More controls and features could make the product harder to use | Shift from feature-first development toward utility-first design and keep only the best unit-assessment score rather than building detailed analytics | [`StudySet.java`](../StudySet.java), [development evolution](media/development-evolution.svg) |
+
+These are representative examples, not a claim that every engineering decision came directly from user feedback.
+
+## Engineering observations that reinforced the same priorities
+
+Some major changes came from development and deployment failures rather than from users. I separate them because they demonstrate a different kind of iteration.
+
+| Engineering observation | Response |
+| --- | --- |
+| JavaFX and embedded-UI integration created build and dependency friction | Move to Swing and simplify the desktop stack |
+| Model responses could be malformed, repetitive, rate-limited, unavailable, or truncated | Add structured contracts, parsing, validation, batching, retries, token budgeting, duplicate filtering, and deterministic fallbacks |
+| The `Question` model evolved to support multiple response types | Add versioned persistence and backward-compatible question loading |
+| A public demo could expose credentials or drift into a second implementation | Keep the Java/Swing sources authoritative and add explicit browser runtime, persistence, and server-side AI boundaries |
+
+This separation matters. Outside use shaped the learning workflow and controls; engineering failures shaped reliability and deployment architecture.
+
+## Evidence boundary
+
+ConceptLab did not collect evidence that would support claims about:
 
 - monthly or daily active users;
 - retention rates;
@@ -18,47 +63,10 @@ ConceptLab did not include production telemetry for:
 - quantified grade improvement;
 - statistically measured learning outcomes.
 
-The useful evidence is therefore not a growth metric. It is that outside use repeatedly exposed product problems and changed what I built.
+The repository therefore treats the 60+ figure as **development and iteration context**, not as growth or educational-outcome proof. Current screenshots, source files, tests, and verification workflows can demonstrate the resulting product behavior, but they do not reconstruct a formal historical experiment that never existed.
 
-## What I was trying to learn
-
-ConceptLab began with a recurring learning problem: having notes and recognizing definitions does not guarantee that someone can apply a concept when the context changes.
-
-Testing focused on practical questions:
-
-- Can another user understand the workflow without me explaining every step?
-- Does practice feel different from simply rereading notes or reviewing definitions?
-- Are generated questions varied enough to remain useful?
-- Does feedback help a user decide what to review next?
-- Are the controls worth the complexity they add?
-- Does the application remain usable when generation or integration behavior is imperfect?
-
-This changed how I evaluated progress. A feature was no longer automatically valuable because it existed.
-
-## How testing changed the product
-
-| Observation or product question | Resulting direction |
-| --- | --- |
-| Recognition alone was not the learning problem I wanted to solve | Emphasize application, inference, method selection, error diagnosis, and explanation in generated practice |
-| Repetition reduced the value of generated practice | Add normalized prompt tracking, seen-question avoidance, answer-uniqueness controls, and separation between practice and assessment banks |
-| Different users wanted different kinds of practice | Make quiz length, difficulty, response mix, and challenge level configurable |
-| A wrong answer should lead to a next step | Connect question feedback with related resources and flashcards |
-| More controls and features could make the tool harder to use | Shift from feature-first development toward utility-first design |
-| Framework and integration friction slowed iteration | Simplify the desktop stack and move from earlier JavaFX work to Swing |
-| Real generation failures were not isolated edge cases | Add validation, batching, retry behavior, token budgeting, duplicate filtering, and local fallback paths |
-
-These changes matter more than the raw tester count because they altered the product's workflow, data rules, and reliability priorities.
-
-## Evidence boundary
-
-I do not claim production adoption, retention, grade improvement, or controlled learning outcomes because ConceptLab did not collect evidence that would support those claims.
-
-The defensible claim is narrower: **60+ people used or tested ConceptLab during development, and repeated outside use materially influenced the final product.**
-
-## What I learned from the process
+## What I learned
 
 The most important transition was from building something that worked for me to building something other people could understand and choose to use.
 
-Early in development, adding functionality often felt like progress. Testing pushed me toward a harder standard: **does this make studying clearer, more useful, or more dependable?**
-
-That shift is visible throughout the final project, from configurable practice and feedback to duplicate prevention, guarded generation, local persistence, and deliberate simplification.
+Early in development, adding functionality often felt like progress. Testing pushed me toward a harder standard: **does this make studying clearer, more useful, or more dependable?** That shift is visible in configurable practice, feedback that points toward review, duplicate prevention, guarded generation, local persistence, and deliberate simplification.
