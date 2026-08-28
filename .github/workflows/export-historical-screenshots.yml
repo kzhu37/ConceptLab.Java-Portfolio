@@ -1,0 +1,22 @@
+name: Export historical screenshots
+
+on:
+  push:
+    branches: [feedback-delta-test]
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Extract historical PNGs
+        run: |
+          mkdir -p /tmp/historical
+          git show 4e8924cdae52931ca950779a38bcea51aa1a1e93:docs/media/browser-production.png > /tmp/historical/browser-production.png
+          git show 4e8924cdae52931ca950779a38bcea51aa1a1e93:docs/media/answer-feedback.png > /tmp/historical/answer-feedback.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: historical-screenshots
+          path: /tmp/historical
