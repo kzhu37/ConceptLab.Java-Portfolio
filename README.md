@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  Used or tested by <strong>60+ people</strong> during development
+  Used or tested by <strong>60+ people</strong> during development · <a href="docs/USER_TESTING.md">testing context</a>
 </p>
 
 <p align="center">
@@ -61,6 +61,10 @@ That principle shaped the engineering too. Fresh practice should not collapse in
 | **Real iteration** | Outside testing changed practice controls, feedback, workflow, and reliability priorities rather than only adding features. |
 | **Public engineering proof** | Runs the real Java/Swing application in a browser and separately verifies the desktop core, browser boundary, deployment artifact, persistence, and live generation path. |
 | **My role** | Independently designed and developed the project end to end, from the learning problem and desktop application through browser adaptation and verification. |
+
+**Core implementation:** [`Main.java`](Main.java) · [`StudySet.java`](StudySet.java) · [`Question.java`](Question.java) · [`api/conceptlab/ai.js`](api/conceptlab/ai.js)
+
+**Executable proof:** [`ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java) · [`GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java) · [`browser-api.test.js`](tests/browser-api.test.js) · [`production-browser-smoke.mjs`](tests/production-browser-smoke.mjs)
 
 ### How ConceptLab turns generation into trusted StudySet data
 
