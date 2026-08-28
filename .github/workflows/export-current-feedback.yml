@@ -1,0 +1,15 @@
+name: Export current feedback asset
+
+on:
+  push:
+    branches: [feedback-delta-test]
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-feedback-webp
+          path: docs/media/browser-feedback-review.webp
