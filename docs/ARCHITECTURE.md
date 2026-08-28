@@ -77,7 +77,7 @@ It also enforces cross-bank integrity. Practice and assessment questions cannot 
 
 MCQs require exactly four non-blank, normalized-distinct choices and a valid correct index. Difficulty must remain within `[0, 1]`.
 
-Known-answer questions can use deterministic local checking when remote grading is unavailable, while remote-only short answers without a stored key fail closed rather than inventing correctness.
+Known-key short answers use conservative deterministic matching when remote grading is unavailable. After normalization, an exact key matches, and a longer response may match when it contains the complete stored key. A partial fragment is not accepted simply because it appears inside the key. [`QuestionAnswerPolicySelfTest.java`](../tests/QuestionAnswerPolicySelfTest.java) protects this behavior.
 
 Normalized prompt and answer keys are also used for duplicate filtering.
 

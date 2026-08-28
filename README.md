@@ -62,7 +62,7 @@ I wanted one workflow connecting source material, fresh practice, testing, feedb
 
 **Core implementation:** [`Main.java`](Main.java) · [`StudySet.java`](StudySet.java) · [`Question.java`](Question.java) · [`api/conceptlab/ai.js`](api/conceptlab/ai.js)
 
-**Executable proof:** [`ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java) · [`GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java) · [`browser-api.test.js`](tests/browser-api.test.js) · [`production-browser-smoke.mjs`](tests/production-browser-smoke.mjs)
+**Executable proof:** [`ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java) · [`GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java) · [`QuestionAnswerPolicySelfTest.java`](tests/QuestionAnswerPolicySelfTest.java) · [`browser-api.test.js`](tests/browser-api.test.js) · [`production-browser-smoke.mjs`](tests/production-browser-smoke.mjs)
 
 ### How ConceptLab turns generation into trusted StudySet data
 
@@ -95,7 +95,7 @@ A StudySet starts with the user's own material and can include learning goals, c
 
 Users can change question count, difficulty, response style, challenge level, seen-question avoidance, and answer uniqueness. Those settings feed into generation constraints, duplicate filtering, and which `Question` objects enter the StudySet.
 
-After a response, ConceptLab can show correctness, an explanation, a related resource, and related flashcards. Questions with known answer keys retain deterministic checking paths when remote grading is unavailable, so a mistake becomes the next review step rather than only a score.
+After a response, ConceptLab can show correctness, an explanation, a related resource, and related flashcards. Questions with known answer keys retain conservative deterministic checking when remote grading is unavailable, so a mistake becomes the next review step rather than only a score.
 
 <p align="center">
   <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab running an application-focused Newtonian Mechanics practice question in the browser edition" width="86%">
@@ -165,11 +165,12 @@ The desktop Java sources remain authoritative. [`browser/build-browser.py`](brow
 
 ## Verification
 
-A successful compile is not enough evidence for the claims this project makes. The repository verifies the desktop core, generation policy, browser boundary, and deployed demo separately.
+A successful compile is not enough evidence for the claims this project makes. The repository verifies the desktop core, answer policy, generation policy, browser boundary, and deployed demo separately.
 
 | Layer | What is verified |
 | --- | --- |
 | **Desktop core** | JDK 21 compilation, model invariants, escaping, StudySet round-trips, duplicate protection, corrupted counts, legacy question loading, malformed persisted records, and resource validation |
+| **Answer policy** | Normalized exact matches, longer responses containing a complete known answer key, rejection of partial fragments, blank-key behavior, and MCQ determinism |
 | **Generation policy** | Source chunking, token-budget bounds, token/quota failure classification, malformed generated-question filtering, deterministic fallback validity, uniqueness behavior, and offline grading paths |
 | **Browser boundary** | Allowed task shapes and models, prompt-size limits, same-origin behavior, response schemas, provider failure handling, key failover, error redaction, and static credential checks |
 | **Production browser** | Deployed commit or artifact equivalence, credential markers, live structured generation, CheerpJ startup in Chromium, seeded StudySet loading, persistence across refresh, Reset Demo behavior, and screenshot evidence |
@@ -219,9 +220,10 @@ macOS/Linux:
 
 ```bash
 javac *.java
-javac -cp . tests/ConceptLabSelfTest.java tests/GenerationPolicySelfTest.java
+javac -cp . tests/ConceptLabSelfTest.java tests/GenerationPolicySelfTest.java tests/QuestionAnswerPolicySelfTest.java
 java -ea -cp .:tests ConceptLabSelfTest
 java -ea -cp .:tests GenerationPolicySelfTest
+java -ea -cp .:tests QuestionAnswerPolicySelfTest
 ```
 
 On Windows, replace the classpath separator `:` with `;`.
