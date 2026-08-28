@@ -32,6 +32,9 @@ import javax.swing.SwingUtilities;
 public final class PortfolioCapture {
     private static final String DEMO_TITLE = "Newtonian Mechanics: Forces, Energy & Momentum";
     private static final Path MEDIA_DIR = Paths.get("docs", "media");
+    private static final int CAPTURE_WIDTH = 1700;
+    private static final int STANDARD_CAPTURE_HEIGHT = 980;
+    private static final int CREATE_CAPTURE_HEIGHT = 900;
 
     private PortfolioCapture() {}
 
@@ -42,8 +45,8 @@ public final class PortfolioCapture {
 
         JFrame frame = waitForFrame(12_000);
         SwingUtilities.invokeAndWait(() -> {
-            frame.setSize(new Dimension(1600, 980));
-            frame.setLocation(80, 40);
+            frame.setSize(new Dimension(CAPTURE_WIDTH, STANDARD_CAPTURE_HEIGHT));
+            frame.setLocation(60, 40);
             frame.toFront();
         });
         pause(900);
@@ -58,8 +61,10 @@ public final class PortfolioCapture {
         clickButtonLater(frame, "Create");
         waitForButton(frame, "Generate Study Set", 5_000);
         fillCreateForm(frame);
+        resizeFrame(frame, CAPTURE_WIDTH, CREATE_CAPTURE_HEIGHT);
         pause(700);
         capture(frame, "create-study-set.png");
+        resizeFrame(frame, CAPTURE_WIDTH, STANDARD_CAPTURE_HEIGHT);
 
         clickButtonLater(frame, "Practice");
         waitForButton(frame, "Generate New Quiz", 5_000);
@@ -309,6 +314,15 @@ public final class PortfolioCapture {
         if (c instanceof Container container) {
             for (Component child : container.getComponents()) collect(child, out);
         }
+    }
+
+    private static void resizeFrame(JFrame frame, int width, int height) throws Exception {
+        SwingUtilities.invokeAndWait(() -> {
+            frame.setSize(new Dimension(width, height));
+            frame.revalidate();
+            frame.repaint();
+        });
+        pause(450);
     }
 
     private static void capture(JFrame frame, String fileName) throws Exception {
