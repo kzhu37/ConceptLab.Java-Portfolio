@@ -1,0 +1,68 @@
+name: Apply exact ConceptLab image replacements
+
+on:
+  push:
+    branches:
+      - exact-image-staging-v3
+    paths:
+      - .github/workflows/apply-exact-image-replacements.yml
+
+permissions:
+  contents: write
+
+jobs:
+  replace:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Recover exact supplied screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 'https://media.canva.com/v2/image-resize/format:PNG/height:1040/quality:100/uri:ifs%3A%2F%2FM%2F8d224a26-581a-4629-adbd-ca356500959a/watermark:F/width:1920?csig=AAAAAAAAAAAAAAAAAAAAAEcBBjGGBaulu9Ta0YpneGODi1f6ZpOgaXKkSAwoiUCw&exp=1787980598&osig=AAAAAAAAAAAAAAAAAAAAAJzWWmpXGucyrAxZpqZro9OCBmqFjdsDD2cNuxxRkhW8&signer=media-rpc&x-canva-quality=thumbnail' -o docs/media/browser-feedback-review.png
+          echo '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f  docs/media/browser-feedback-review.png' | sha256sum -c -
+          git show 4e8924cdae52931ca950779a38bcea51aa1a1e93:docs/media/answer-feedback.png > docs/media/browser-generated-quiz.png
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+
+      - name: Update references and remove superseded assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          s = p.read_text()
+          s = s.replace('docs/media/browser-feedback-review.webp', 'docs/media/browser-feedback-review.png')
+          s = s.replace('docs/media/browser-generated-quiz.webp', 'docs/media/browser-generated-quiz.png')
+          p.write_text(s)
+          p = Path('docs/USER_TESTING.md')
+          s = p.read_text().replace('media/browser-feedback-review.webp', 'media/browser-feedback-review.png')
+          p.write_text(s)
+          PY
+          rm -f docs/media/browser-feedback-review.webp docs/media/browser-generated-quiz.webp
+          rm -f .github/workflows/apply-exact-image-replacements.yml
+
+      - name: Verify final tree content
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'docs/media/browser-feedback-review.png' README.md
+          grep -q 'docs/media/browser-generated-quiz.png' README.md
+          grep -q 'media/browser-feedback-review.png' docs/USER_TESTING.md
+          test ! -e docs/media/browser-feedback-review.webp
+          test ! -e docs/media/browser-generated-quiz.webp
+          echo '7e3743ad9b8cdbcfab735b40b0f17e36c3c6c023335515db1b3cf5488fc3b22f  docs/media/browser-feedback-review.png' | sha256sum -c -
+          echo '1ced008c796a931a7e03bb09c37156ca8bc7a1eed6587182032c12025fcdf43c  docs/media/browser-generated-quiz.png' | sha256sum -c -
+
+      - name: Commit final tree to staging branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Replace ConceptLab screenshots with supplied PNGs'
+          git push origin HEAD:exact-image-staging-v3
