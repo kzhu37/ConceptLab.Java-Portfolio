@@ -35,7 +35,7 @@ The strongest evidence is not the raw tester count. It is that observations led 
 | --- | --- | --- |
 | Repetition made fresh practice less useful | Track normalized prompts, keep practice and assessment banks disjoint, add seen-question avoidance, and optionally require unique correct-answer text | [`StudySet.java`](../StudySet.java), [`Question.java`](../Question.java), [`GenerationPolicySelfTest.java`](../tests/GenerationPolicySelfTest.java), [practice settings](media/practice-settings.png) |
 | Different users wanted different kinds of practice | Make question count, difficulty, response mix, and challenge level configurable instead of creating separate workflows | [`Main.java`](../Main.java), [practice settings](media/practice-settings.png) |
-| A wrong answer alone did not give enough direction | Connect response feedback to an explanation, related resources, and related flashcards | [feedback example](media/browser-feedback-review.webp), [`Main.java`](../Main.java) |
+| A wrong answer alone did not give enough direction | Connect response feedback to an explanation, related resources, and related flashcards | [feedback example](media/browser-feedback-review.png), [`Main.java`](../Main.java) |
 | More controls and features could make the product harder to use | Shift from feature-first development toward utility-first design and keep only the best unit-assessment score rather than building detailed analytics | [`StudySet.java`](../StudySet.java), [development evolution](media/development-evolution.svg) |
 
 These are representative examples, not a claim that every engineering decision came directly from user feedback.

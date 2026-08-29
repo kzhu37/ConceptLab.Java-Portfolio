@@ -24,7 +24,7 @@
       <img src="docs/media/conceptlab-dashboard.png" alt="ConceptLab dashboard showing a Newtonian Mechanics StudySet">
     </td>
     <td width="50%">
-      <img src="docs/media/browser-feedback-review.webp" alt="ConceptLab feedback after an incorrect mechanics response, with correction, PhET review material, and related flashcards">
+      <img src="docs/media/browser-feedback-review.png" alt="ConceptLab feedback after an incorrect mechanics response, with correction, PhET review material, and related flashcards">
     </td>
   </tr>
   <tr>
@@ -98,7 +98,7 @@ Users can change question count, difficulty, response style, challenge level, se
 After a response, ConceptLab can show correctness, an explanation, a related resource, and related flashcards. Questions with known answer keys retain conservative deterministic checking when remote grading is unavailable, so a mistake becomes the next review step rather than only a score.
 
 <p align="center">
-  <img src="docs/media/browser-generated-quiz.webp" alt="ConceptLab running an application-focused Newtonian Mechanics practice question in the browser edition" width="86%">
+  <img src="docs/media/browser-generated-quiz.png" alt="ConceptLab running an application-focused Newtonian Mechanics practice question in the browser edition" width="86%">
 </p>
 <p align="center">
   <sub><strong>Practice proof:</strong> the public edition runs the Java/Swing workflow directly, including generated questions, saved StudySets, and the same validation rules used by the desktop application.</sub>
