@@ -2,15 +2,13 @@ name: Verify ConceptLab portfolio
 
 on:
   push:
-    branches: [main, browser-deployment]
+    branches: [main]
     paths-ignore:
       - 'docs/media/*.png'
-      - 'docs/media/*.webp'
   pull_request:
     branches: [main]
     paths-ignore:
       - 'docs/media/*.png'
-      - 'docs/media/*.webp'
   workflow_dispatch:
 
 permissions:

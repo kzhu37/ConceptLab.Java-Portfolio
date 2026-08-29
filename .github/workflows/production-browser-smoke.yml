@@ -2,7 +2,7 @@ name: Verify live ConceptLab browser deployment
 
 on:
   push:
-    branches: [browser-deployment, main]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
