@@ -51,18 +51,18 @@ I wanted one workflow connecting source material, fresh practice, testing, feedb
 
 ## At a glance
 
-| Area | What ConceptLab demonstrates |
+| Area | Current implementation |
 | --- | --- |
 | **Learning workflow** | Source material becomes reusable StudySets with flashcards, fresh practice, unit assessments, feedback, and related resources. |
 | **Guarded generation** | Structured contracts, validation, batching, retries, deduplication, token control, provider failover, and deterministic fallbacks. |
 | **Durable local data** | Versioned `.clab` StudySets with escaping, count checks, corruption handling, backward-compatible loading, and cross-bank duplicate protection. |
 | **Real iteration** | Outside use changed practice controls, feedback, workflow, and reliability priorities. |
-| **Public engineering proof** | The real Java/Swing app runs in a browser, with separate verification of desktop, browser, persistence, and live generation paths. |
+| **Browser adaptation and verification** | The Java/Swing application runs in a browser, with separate verification of desktop, browser, persistence, and live generation paths. |
 | **My role** | Independently designed and developed the project end to end. |
 
 **Core implementation:** [`Main.java`](Main.java) · [`StudySet.java`](StudySet.java) · [`Question.java`](Question.java) · [`api/conceptlab/ai.js`](api/conceptlab/ai.js)
 
-**Executable proof:** [`ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java) · [`GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java) · [`QuestionAnswerPolicySelfTest.java`](tests/QuestionAnswerPolicySelfTest.java) · [`browser-api.test.js`](tests/browser-api.test.js) · [`production-browser-smoke.mjs`](tests/production-browser-smoke.mjs)
+**Verification entry points:** [`ConceptLabSelfTest.java`](tests/ConceptLabSelfTest.java) · [`GenerationPolicySelfTest.java`](tests/GenerationPolicySelfTest.java) · [`QuestionAnswerPolicySelfTest.java`](tests/QuestionAnswerPolicySelfTest.java) · [`browser-api.test.js`](tests/browser-api.test.js) · [`production-browser-smoke.mjs`](tests/production-browser-smoke.mjs)
 
 ### How ConceptLab turns generation into trusted StudySet data
 
@@ -101,7 +101,7 @@ After a response, ConceptLab can show correctness, an explanation, a related res
   <img src="docs/media/browser-generated-quiz.png" alt="ConceptLab running an application-focused Newtonian Mechanics practice question in the browser edition" width="86%">
 </p>
 <p align="center">
-  <sub><strong>Practice proof:</strong> the public edition runs the Java/Swing workflow directly, including generated questions, saved StudySets, and the same validation rules used by the desktop application.</sub>
+  <sub><strong>Practice in browser:</strong> the public edition runs the Java/Swing workflow directly, including generated questions, saved StudySets, and the same validation rules used by the desktop application.</sub>
 </p>
 
 ## Engineering highlights
