@@ -194,4 +194,4 @@ For a longer-term production version, the clearest extraction order would be:
 4. `QuizService` for assessment generation and answer evaluation;
 5. a standalone JSON parser utility.
 
-For this release, stabilizing the complete product and validating the learning workflow took priority over a late structural rewrite. The trade-off is documented because it is part of the engineering history, not something the portfolio should hide.
+For this release, stabilizing the complete product and validating the learning workflow took priority over a late structural rewrite. The trade-off remains documented because it is part of the engineering history and affects how the current architecture should be understood.
