@@ -1,4 +1,4 @@
-name: Verify ConceptLab portfolio
+name: Verify ConceptLab
 
 on:
   push:
@@ -69,15 +69,15 @@ jobs:
       - name: Run browser static security checks
         run: npm run verify:static
 
-      - name: Enforce portfolio punctuation policy
+      - name: Enforce public documentation punctuation policy
         shell: bash
         run: |
           if grep -RInP '[\x{2010}-\x{2015}\x{2E3A}\x{2E3B}]' \
             README.md docs/*.md THIRD_PARTY_NOTICES.md index.html docs/media/*.svg; then
-            echo 'Long dash detected in public portfolio writing.'
+            echo 'Long dash detected in public documentation.'
             exit 1
           fi
-          echo 'Public portfolio writing contains no em dashes or en dashes.'
+          echo 'Public documentation contains no em dashes or en dashes.'
 
       - name: Scan public tree and browser artifact for Groq-style secrets
         shell: bash
@@ -110,7 +110,7 @@ jobs:
       - name: Upload fresh capture artifact
         uses: actions/upload-artifact@v7
         with:
-          name: conceptlab-portfolio-screenshots
+          name: conceptlab-ui-screenshots
           path: docs/media/*.png
           if-no-files-found: error
 
