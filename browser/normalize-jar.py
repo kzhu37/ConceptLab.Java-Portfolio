@@ -14,7 +14,7 @@ def normalize(path: Path) -> None:
     with zipfile.ZipFile(path, "r") as source:
         entries = [(info.filename, source.read(info.filename)) for info in source.infolist() if not info.is_dir()]
 
-    with tempfile.NamedTemporaryFile(prefix="conceptlab-jar-", suffix=".jar", delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(prefix="conceptlab-jar-", suffix=".jar", dir=path.parent, delete=False) as tmp:
         temp_path = Path(tmp.name)
 
     try:
