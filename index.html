@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Run the real Java/Swing ConceptLab study application in your browser.">
+  <title>ConceptLab Browser Edition</title>
+  <link rel="stylesheet" href="/browser.css">
+  <script src="https://cjrtnc.leaningtech.com/4.3/loader.js"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="/ConceptLabLogo.svg" alt="" class="logo">
+        <div>
+          <h1>ConceptLab</h1>
+          <p>Java/Swing browser edition</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span id="runtime-status" class="status-pill" role="status" aria-live="polite">Preparing Java runtime...</span>
+        <button id="reset-demo" class="secondary-button" type="button">Reset Demo</button>
+      </div>
+    </header>
+
+    <section class="disclosure" aria-label="Browser edition information">
+      <strong>Browser edition:</strong> ConceptLab's Java/Swing application runs inside a browser sandbox. StudySet files persist in this browser, and AI requests use a constrained same-origin server bridge so users never need an API key.
+    </section>
+
+    <section class="app-frame" aria-label="ConceptLab Java application">
+      <div id="launch-overlay" class="launch-overlay">
+        <div class="loader" aria-hidden="true"></div>
+        <h2>Loading ConceptLab Java...</h2>
+        <p id="launch-detail">Initializing CheerpJ 4.3 with a Java 17 runtime.</p>
+        <div class="progress-track" aria-hidden="true"><div id="launch-progress" class="progress-fill"></div></div>
+        <button id="retry-launch" class="primary-button hidden" type="button">Retry</button>
+      </div>
+      <div id="conceptlab-display"></div>
+    </section>
+
+    <p class="small-screen-note">ConceptLab is a desktop study application and is best experienced on a larger screen.</p>
+
+    <footer>
+      Browser runtime powered by <a href="https://cheerpj.com/" target="_blank" rel="noreferrer">CheerpJ Core</a> under the CheerpJ Community License. CheerpJ is loaded from Leaning Technologies' supported CDN and is not redistributed by this site.
+    </footer>
+  </main>
+  <script src="/browser.js"></script>
+</body>
+</html>
