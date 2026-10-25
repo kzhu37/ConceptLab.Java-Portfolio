@@ -1,0 +1,12 @@
+{
+  "name": "conceptlab-browser-portfolio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/browser-api.test.js",
+    "verify:static": "node tests/browser-static-check.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
